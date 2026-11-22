@@ -635,6 +635,13 @@
         </div>
       </section>
       <section class="section-card">
+        <div class="section-heading"><strong>Случайный соперник</strong><span>ОНЛАЙН</span></div>
+        <p class="empty-state">Игра до победы. Победа: +25 ELO · поражение: −25 ELO · ничья: 0.</p>
+        <button class="primary-button" id="findRandomOpponent" style="width:100%">Найти соперника</button>
+        <button class="secondary-button" id="cancelMatchmaking" style="width:100%;margin-top:8px" hidden>Отменить поиск</button>
+        <p class="online-error" id="matchmakingStatus" aria-live="polite"></p>
+      </section>
+      <section class="section-card">
         <div class="section-heading"><strong>Найти игрока</strong><span>ПО TELEGRAM-ЮЗЕРНЕЙМУ</span></div>
         <form class="inline-form" id="playerSearchForm">
           <input class="text-input" id="playerSearchInput" type="text" placeholder="@username" autocomplete="off" maxlength="34">
@@ -744,6 +751,8 @@
       let onlineGameData = null;
       let onlineColor = null;
       let onlinePollTimer = null;
+      let matchmakingTimer = null;
+      let matchmakingBusy = false;
 
       const colorOf = piece => piece === piece.toUpperCase() ? "w" : "b";
       const other = color => color === "w" ? "b" : "w";
@@ -1342,6 +1351,60 @@
         }
       }
 
+      async function pollMatchmaking() {
+        if (matchmakingBusy || !API_BASE_URL) return;
+        matchmakingBusy = true;
+        try {
+          const data = await apiRequest("/api/matchmaking", "POST");
+          if (data.status === "matched") {
+            if (matchmakingTimer) clearInterval(matchmakingTimer);
+            matchmakingTimer = null;
+            document.getElementById("matchmakingStatus").textContent = "Соперник найден — игра начинается!";
+            document.getElementById("findRandomOpponent").hidden = false;
+            document.getElementById("cancelMatchmaking").hidden = true;
+            await openOnlineGame(data.game.id);
+          } else {
+            document.getElementById("matchmakingStatus").textContent = "Ищем соперника…";
+          }
+        } catch (error) {
+          if (matchmakingTimer) clearInterval(matchmakingTimer);
+          matchmakingTimer = null;
+          document.getElementById("findRandomOpponent").hidden = false;
+          document.getElementById("cancelMatchmaking").hidden = true;
+          document.getElementById("matchmakingStatus").textContent = error.message;
+        } finally {
+          matchmakingBusy = false;
+        }
+      }
+
+      async function startMatchmaking() {
+        if (!API_BASE_URL || !telegram || !telegram.initData) {
+          document.getElementById("matchmakingStatus").textContent =
+            !API_BASE_URL ? "Онлайн-сервер ещё не подключён." : "Открой Mini App из Telegram.";
+          return;
+        }
+        document.getElementById("findRandomOpponent").hidden = true;
+        document.getElementById("cancelMatchmaking").hidden = false;
+        document.getElementById("matchmakingStatus").textContent = "Ищем соперника…";
+        await pollMatchmaking();
+        if (!matchmakingTimer && !onlineGameId && document.getElementById("cancelMatchmaking").hidden === false) {
+          matchmakingTimer = setInterval(pollMatchmaking, 2500);
+        }
+      }
+
+      async function cancelMatchmaking() {
+        if (matchmakingTimer) clearInterval(matchmakingTimer);
+        matchmakingTimer = null;
+        document.getElementById("findRandomOpponent").hidden = false;
+        document.getElementById("cancelMatchmaking").hidden = true;
+        try {
+          await apiRequest("/api/matchmaking/cancel", "POST");
+          document.getElementById("matchmakingStatus").textContent = "Поиск отменён.";
+        } catch (error) {
+          document.getElementById("matchmakingStatus").textContent = error.message;
+        }
+      }
+
       async function startOnlineGame(friend) {
         try {
           const game = await apiRequest("/api/games", "POST", {
@@ -1376,7 +1439,11 @@
 
       async function openOnlineGame(gameId) {
         if (onlinePollTimer) clearInterval(onlinePollTimer);
+        if (matchmakingTimer) clearInterval(matchmakingTimer);
+        matchmakingTimer = null;
         onlineGameId = gameId;
+        document.getElementById("findRandomOpponent").hidden = false;
+        document.getElementById("cancelMatchmaking").hidden = true;
         playersView.classList.remove("active");
         menuView.classList.add("hidden");
         gameView.classList.add("active");
@@ -1444,9 +1511,14 @@
       });
       document.getElementById("openPlayers").addEventListener("click", openPlayersView);
       document.getElementById("playersBack").addEventListener("click", () => {
+        if (matchmakingTimer || !document.getElementById("cancelMatchmaking").hidden) {
+          cancelMatchmaking();
+        }
         playersView.classList.remove("active");
         menuView.classList.remove("hidden");
       });
+      document.getElementById("findRandomOpponent").addEventListener("click", startMatchmaking);
+      document.getElementById("cancelMatchmaking").addEventListener("click", cancelMatchmaking);
       document.getElementById("playerSearchForm").addEventListener("submit", event => {
         event.preventDefault();
         const query = document.getElementById("playerSearchInput").value.trim();
