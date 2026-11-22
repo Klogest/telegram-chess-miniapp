@@ -257,6 +257,104 @@
     .game-view { display: none; }
     .game-view.active { display: block; }
     .menu-view.hidden { display: none; }
+    .players-view { display: none; }
+    .players-view.active { display: block; }
+
+    .online-card, .section-card {
+      margin-top: 13px;
+      padding: 15px;
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      background: rgba(24, 35, 49, .9);
+    }
+
+    .online-card {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 11px;
+    }
+
+    .online-card strong, .online-card small { display: block; }
+    .online-card strong { margin-bottom: 4px; font-size: 14px; }
+    .online-card small { color: var(--muted); font-size: 11px; line-height: 1.4; }
+
+    .rating-chip {
+      padding: 8px 10px;
+      border: 1px solid rgba(232,201,137,.18);
+      border-radius: 12px;
+      color: var(--gold);
+      background: rgba(232,201,137,.08);
+      font-size: 12px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .online-card .secondary-button {
+      grid-column: 1 / -1;
+      width: 100%;
+    }
+
+    .inline-form {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .text-input {
+      width: 100%;
+      min-width: 0;
+      min-height: 44px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      outline: none;
+      color: var(--ink);
+      background: #111b27;
+      font: inherit;
+      font-size: 13px;
+    }
+
+    .text-input:focus { border-color: rgba(185,241,212,.6); }
+    .inline-form .secondary-button { min-height: 44px; }
+
+    .section-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 0 0 11px;
+      font-size: 13px;
+    }
+
+    .section-heading span {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .player-list { display: grid; gap: 8px; }
+
+    .player-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px 11px;
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 12px;
+      background: rgba(255,255,255,.025);
+    }
+
+    .player-info { min-width: 0; }
+    .player-info strong { display: block; overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+    .player-info small { color: var(--muted); font-size: 10px; }
+    .player-row .secondary-button { min-height: 34px; padding: 0 10px; border-radius: 10px; font-size: 11px; }
+    .empty-state { color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .online-error { min-height: 15px; margin: 9px 0 0; color: var(--danger); font-size: 11px; }
+    .online-success { color: var(--mint); }
+    .invite-code { overflow-wrap: anywhere; color: var(--mint); font-size: 11px; }
 
     .game-heading {
       display: flex;
@@ -510,7 +608,57 @@
           <small>Ходи в своём темпе</small>
         </div>
       </div>
+      <section class="online-card">
+        <div>
+          <strong id="menuPlayerName">Шахматный клуб</strong>
+          <small id="menuPlayerHint">Профиль, друзья и онлайн-партии</small>
+        </div>
+        <span class="rating-chip" id="menuPlayerElo">1000 ELO</span>
+        <button class="secondary-button" id="openPlayers">Игроки и друзья <span aria-hidden="true">→</span></button>
+      </section>
       <p class="footnote">Локальная игра для двух игроков на одном устройстве. Нажми на фигуру, затем на клетку для хода.</p>
+    </section>
+
+    <section class="players-view" id="playersView">
+      <div class="game-heading">
+        <div>
+          <p class="eyebrow" style="margin-bottom:7px">Онлайн-клуб</p>
+          <h1>Игроки</h1>
+        </div>
+        <button class="icon-button" id="playersBack" aria-label="Вернуться в меню">⌂</button>
+      </div>
+      <section class="section-card">
+        <div class="section-heading"><strong>Твой профиль</strong><span>РЕЙТИНГ ELO</span></div>
+        <div class="player-row">
+          <div class="player-info"><strong id="myPlayerName">Загрузка…</strong><small id="myPlayerStats">Стартовый рейтинг — 1000</small></div>
+          <span class="rating-chip" id="myPlayerElo">—</span>
+        </div>
+      </section>
+      <section class="section-card">
+        <div class="section-heading"><strong>Найти игрока</strong><span>ПО TELEGRAM-ЮЗЕРНЕЙМУ</span></div>
+        <form class="inline-form" id="playerSearchForm">
+          <input class="text-input" id="playerSearchInput" type="text" placeholder="@username" autocomplete="off" maxlength="34">
+          <button class="secondary-button" type="submit">Найти</button>
+        </form>
+        <p class="online-error" id="onlineMessage" aria-live="polite"></p>
+        <div class="player-list" id="searchResults"></div>
+      </section>
+      <section class="section-card">
+        <div class="section-heading"><strong>Заявки в друзья</strong></div>
+        <div class="player-list" id="incomingRequests"><span class="empty-state">Нет новых заявок</span></div>
+      </section>
+      <section class="section-card">
+        <div class="section-heading"><strong>Друзья</strong><span id="friendsCount">0</span></div>
+        <div class="player-list" id="friendsList"><span class="empty-state">Пока никого нет</span></div>
+      </section>
+      <section class="section-card">
+        <div class="section-heading"><strong>Мои онлайн-партии</strong></div>
+        <div class="player-list" id="onlineGamesList"><span class="empty-state">Партии появятся здесь</span></div>
+      </section>
+      <section class="section-card">
+        <div class="section-heading"><strong>Таблица лидеров</strong><span>ТОП 50</span></div>
+        <div class="player-list" id="leaderboardList"><span class="empty-state">Загрузка…</span></div>
+      </section>
     </section>
 
     <section class="game-view" id="gameView">
@@ -548,6 +696,7 @@
   <script>
     (() => {
       const telegram = window.Telegram && window.Telegram.WebApp;
+      const API_BASE_URL = "https://telegram-chess-api.onrender.com";
       if (telegram) {
         telegram.ready();
         telegram.expand();
@@ -569,12 +718,14 @@
       const boardElement = document.getElementById("board");
       const menuView = document.getElementById("menuView");
       const gameView = document.getElementById("gameView");
+      const playersView = document.getElementById("playersView");
       const statusText = document.getElementById("statusText");
       const statusHint = document.getElementById("statusHint");
       const turnBadge = document.getElementById("turnBadge");
       const historyList = document.getElementById("historyList");
       const moveCount = document.getElementById("moveCount");
       const promotionDialog = document.getElementById("promotionDialog");
+      const onlineMessage = document.getElementById("onlineMessage");
 
       let board;
       let turn;
@@ -588,6 +739,11 @@
       let captured = { w: [], b: [] };
       let pendingPromotion = null;
       let finished = false;
+      let profile = null;
+      let onlineGameId = null;
+      let onlineGameData = null;
+      let onlineColor = null;
+      let onlinePollTimer = null;
 
       const colorOf = piece => piece === piece.toUpperCase() ? "w" : "b";
       const other = color => color === "w" ? "b" : "w";
@@ -595,6 +751,25 @@
       const colOf = square => square % 8;
       const inside = (row, col) => row >= 0 && row < 8 && col >= 0 && col < 8;
       const squareName = square => `${files[colOf(square)]}${8 - rowOf(square)}`;
+      const squareFromName = name => (8 - Number(name[1])) * 8 + files.indexOf(name[0]);
+
+      function boardFromFen(fen) {
+        const [placement, activeColor, rights, ep] = fen.split(" ");
+        const next = [];
+        for (const row of placement.split("/")) {
+          for (const char of row) {
+            if (/\d/.test(char)) next.push(...Array(Number(char)).fill(null));
+            else next.push(char);
+          }
+        }
+        turn = activeColor === "w" ? "w" : "b";
+        castling = {
+          K: rights.includes("K"), Q: rights.includes("Q"),
+          k: rights.includes("k"), q: rights.includes("q")
+        };
+        enPassant = ep === "-" ? null : squareFromName(ep);
+        return next;
+      }
 
       function initialBoard() {
         return [
@@ -791,6 +966,10 @@
       }
 
       function completeMove(move, promotion = "Q") {
+        if (onlineGameId) {
+          submitOnlineMove(move, promotion);
+          return;
+        }
         const piece = board[move.from];
         let taken = board[move.to];
         if (move.enPassant) taken = board[move.to + (turn === "w" ? 8 : -8)];
@@ -829,6 +1008,10 @@
 
       function onSquareClick(square) {
         if (finished) return;
+        if (onlineGameId && turn !== onlineColor) {
+          statusHint.textContent = "Сейчас ход соперника";
+          return;
+        }
         const piece = board[square];
         if (selected !== null) {
           const move = selectedMoves.find(item => item.to === square);
@@ -949,24 +1132,329 @@
       }
 
       function render() {
-        turnBadge.textContent = turn === "w" ? "белые" : "чёрные";
-        turnBadge.classList.toggle("black", turn === "b");
+        turnBadge.textContent = onlineGameId
+          ? (onlineColor === "w" ? "ты белыми" : "ты чёрными")
+          : (turn === "w" ? "белые" : "чёрные");
+        turnBadge.classList.toggle("black", onlineGameId ? onlineColor === "b" : turn === "b");
         if (!finished) {
-          statusText.textContent = inCheck(board, turn) ? "Шах!" : `Ход ${turn === "w" ? "белых" : "чёрных"}`;
-          statusHint.textContent = inCheck(board, turn) ? "Король под атакой" : "Выбери фигуру, чтобы увидеть ходы";
+          const check = inCheck(board, turn);
+          statusText.textContent = check ? "Шах!" : onlineGameId
+            ? (turn === onlineColor ? "Твой ход" : "Ход соперника")
+            : `Ход ${turn === "w" ? "белых" : "чёрных"}`;
+          statusHint.textContent = check ? "Король под атакой" : onlineGameId
+            ? `${onlineGameData?.white?.username ? `@${onlineGameData.white.username}` : onlineGameData?.white?.first_name} против ${onlineGameData?.black?.username ? `@${onlineGameData.black.username}` : onlineGameData?.black?.first_name}`
+            : "Выбери фигуру, чтобы увидеть ходы";
         }
         renderBoard();
         renderHistory();
       }
 
+      function setOnlineMessage(text, success = false) {
+        onlineMessage.textContent = text || "";
+        onlineMessage.classList.toggle("online-success", success);
+      }
+
+      async function apiRequest(path, method = "GET", body) {
+        if (!API_BASE_URL) throw new Error("Онлайн-сервер ещё не подключён");
+        if (!telegram || !telegram.initData) throw new Error("Открой Mini App из Telegram, чтобы войти");
+        const response = await fetch(`${API_BASE_URL}${path}`, {
+          method,
+          headers: {
+            "Content-Type": "application/json",
+            "X-Telegram-Init-Data": telegram.initData
+          },
+          body: body === undefined ? undefined : JSON.stringify(body)
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.detail || `Ошибка сервера: ${response.status}`);
+        return data;
+      }
+
+      function makePlayerRow(player, actionLabel, action) {
+        const row = document.createElement("div");
+        row.className = "player-row";
+        const info = document.createElement("div");
+        info.className = "player-info";
+        const name = document.createElement("strong");
+        name.textContent = player.username ? `@${player.username}` : player.first_name;
+        const stats = document.createElement("small");
+        stats.textContent = `${player.elo} ELO · ${player.games_played} партий`;
+        info.append(name, stats);
+        row.appendChild(info);
+        if (actionLabel) {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "secondary-button";
+          button.textContent = actionLabel;
+          button.addEventListener("click", action);
+          row.appendChild(button);
+        }
+        return row;
+      }
+
+      function openPlayersView() {
+        if (onlinePollTimer) clearInterval(onlinePollTimer);
+        onlinePollTimer = null;
+        onlineGameId = null;
+        onlineGameData = null;
+        onlineColor = null;
+        gameView.classList.remove("active");
+        menuView.classList.add("hidden");
+        playersView.classList.add("active");
+        loadOnlineData();
+      }
+
+      async function loadOnlineData() {
+        if (!API_BASE_URL) {
+          document.getElementById("menuPlayerName").textContent = "Онлайн-клуб";
+          document.getElementById("menuPlayerHint").textContent = "Сервер рейтинга ещё не подключён";
+          document.getElementById("myPlayerName").textContent = "Сервер не подключён";
+          setOnlineMessage("Сначала нужно развернуть онлайн-сервер с базой игроков.");
+          return;
+        }
+        if (!telegram || !telegram.initData) {
+          document.getElementById("myPlayerName").textContent = "Нужен вход из Telegram";
+          setOnlineMessage("Открой Mini App кнопкой в Telegram, а не в обычном браузере.");
+          return;
+        }
+        setOnlineMessage("Подключаю профиль…");
+        try {
+          const auth = await apiRequest("/api/auth", "POST");
+          profile = auth.player;
+          document.getElementById("menuPlayerName").textContent =
+            profile.username ? `@${profile.username}` : profile.first_name;
+          document.getElementById("menuPlayerHint").textContent =
+            `${profile.games_played} партий · ${profile.wins} побед`;
+          document.getElementById("menuPlayerElo").textContent = `${profile.elo} ELO`;
+          document.getElementById("myPlayerName").textContent =
+            profile.username ? `@${profile.username}` : profile.first_name;
+          document.getElementById("myPlayerStats").textContent =
+            `${profile.games_played} партий · ${profile.wins} побед`;
+          document.getElementById("myPlayerElo").textContent = `${profile.elo} ELO`;
+          setOnlineMessage("");
+          await Promise.all([loadFriends(), loadLeaderboard(), loadOnlineGames()]);
+        } catch (error) {
+          setOnlineMessage(error.message);
+        }
+      }
+
+      async function searchPlayers(query) {
+        const results = document.getElementById("searchResults");
+        results.innerHTML = "";
+        try {
+          const data = await apiRequest(`/api/players?q=${encodeURIComponent(query)}`);
+          if (!data.players.length) {
+            results.innerHTML = '<span class="empty-state">Игрок не найден. Попроси его открыть Mini App.</span>';
+            return;
+          }
+          for (const player of data.players) {
+            results.appendChild(makePlayerRow(player, "Добавить", async () => {
+              try {
+                const request = await apiRequest("/api/friends/request", "POST", {
+                  username: player.username
+                });
+                setOnlineMessage(
+                  request.status === "accepted" ? "Вы уже друзья." : "Заявка отправлена.",
+                  true
+                );
+                await loadFriends();
+              } catch (error) {
+                setOnlineMessage(error.message);
+              }
+            }));
+          }
+        } catch (error) {
+          setOnlineMessage(error.message);
+        }
+      }
+
+      async function loadFriends() {
+        const data = await apiRequest("/api/friends");
+        const friendsList = document.getElementById("friendsList");
+        const incomingList = document.getElementById("incomingRequests");
+        friendsList.innerHTML = "";
+        incomingList.innerHTML = "";
+        document.getElementById("friendsCount").textContent = String(data.friends.length);
+        if (!data.friends.length) {
+          friendsList.innerHTML = '<span class="empty-state">Пока никого нет</span>';
+        } else {
+          for (const friend of data.friends) {
+            friendsList.appendChild(makePlayerRow(friend, "Играть", () => startOnlineGame(friend)));
+          }
+        }
+        if (!data.incoming.length) {
+          incomingList.innerHTML = '<span class="empty-state">Нет новых заявок</span>';
+        } else {
+          for (const request of data.incoming) {
+            incomingList.appendChild(makePlayerRow(request, "Принять", async () => {
+              try {
+                await apiRequest(`/api/friends/${request.request_id}/accept`, "POST", {});
+                await loadFriends();
+                setOnlineMessage("Теперь вы друзья.", true);
+              } catch (error) {
+                setOnlineMessage(error.message);
+              }
+            }));
+          }
+        }
+      }
+
+      async function loadLeaderboard() {
+        const list = document.getElementById("leaderboardList");
+        const data = await apiRequest("/api/leaderboard");
+        list.innerHTML = "";
+        if (!data.players.length) {
+          list.innerHTML = '<span class="empty-state">Пока нет игроков</span>';
+          return;
+        }
+        data.players.forEach((player, index) => {
+          const row = makePlayerRow(player, null, null);
+          const rank = document.createElement("span");
+          rank.className = "rating-chip";
+          rank.textContent = `#${index + 1} · ${player.elo}`;
+          row.appendChild(rank);
+          list.appendChild(row);
+        });
+      }
+
+      async function loadOnlineGames() {
+        const list = document.getElementById("onlineGamesList");
+        const data = await apiRequest("/api/games");
+        list.innerHTML = "";
+        if (!data.games.length) {
+          list.innerHTML = '<span class="empty-state">Партии появятся здесь</span>';
+          return;
+        }
+        for (const game of data.games) {
+          const opponent = game.white.id === profile.id ? game.black : game.white;
+          const row = makePlayerRow(
+            { ...opponent, games_played: opponent.games_played || 0 },
+            game.status === "active" ? "Открыть" : "Итог",
+            () => openOnlineGame(game.id)
+          );
+          if (game.status === "finished") {
+            const result = document.createElement("small");
+            result.className = "online-success";
+            result.textContent = ` · ${game.result}`;
+            row.querySelector(".player-info").appendChild(result);
+          }
+          list.appendChild(row);
+        }
+      }
+
+      async function startOnlineGame(friend) {
+        try {
+          const game = await apiRequest("/api/games", "POST", {
+            friend_username: friend.username
+          });
+          await openOnlineGame(game.id);
+        } catch (error) {
+          setOnlineMessage(error.message);
+        }
+      }
+
+      function showOnlineGame(game) {
+        onlineGameData = game;
+        onlineColor = game.white.id === profile.id ? "w" : "b";
+        board = boardFromFen(game.fen);
+        history = game.moves.map(move => move.san);
+        const last = game.moves[game.moves.length - 1];
+        lastMove = last ? [squareFromName(last.uci.slice(0, 2)), squareFromName(last.uci.slice(2, 4))] : null;
+        selected = null;
+        selectedMoves = [];
+        finished = game.status === "finished";
+        if (finished) {
+          const won = game.winner_id === profile.id;
+          statusText.textContent = game.result === "1/2-1/2"
+            ? "Ничья"
+            : won ? "Ты победил!" : "Партия окончена";
+          const delta = onlineColor === "w" ? game.rating_change.white : game.rating_change.black;
+          statusHint.textContent = `Изменение рейтинга: ${delta > 0 ? "+" : ""}${delta} ELO`;
+        }
+        render();
+      }
+
+      async function openOnlineGame(gameId) {
+        if (onlinePollTimer) clearInterval(onlinePollTimer);
+        onlineGameId = gameId;
+        playersView.classList.remove("active");
+        menuView.classList.add("hidden");
+        gameView.classList.add("active");
+        document.getElementById("newGame").hidden = true;
+        try {
+          const game = await apiRequest(`/api/games/${encodeURIComponent(gameId)}`);
+          showOnlineGame(game);
+          onlinePollTimer = setInterval(async () => {
+            try {
+              const update = await apiRequest(`/api/games/${encodeURIComponent(gameId)}`);
+              if (onlineGameData?.fen !== update.fen || onlineGameData?.status !== update.status) {
+                showOnlineGame(update);
+                if (update.status === "finished") clearInterval(onlinePollTimer);
+              }
+            } catch (error) {
+              statusHint.textContent = error.message;
+            }
+          }, 1500);
+        } catch (error) {
+          onlineGameId = null;
+          gameView.classList.remove("active");
+          playersView.classList.add("active");
+          setOnlineMessage(error.message);
+        }
+      }
+
+      async function submitOnlineMove(move, promotion) {
+        const uci = `${squareName(move.from)}${squareName(move.to)}${move.promotion ? promotion.toLowerCase() : ""}`;
+        try {
+          const game = await apiRequest(
+            `/api/games/${encodeURIComponent(onlineGameId)}/move`,
+            "POST",
+            { uci }
+          );
+          showOnlineGame(game);
+        } catch (error) {
+          statusHint.textContent = error.message;
+          const game = await apiRequest(`/api/games/${encodeURIComponent(onlineGameId)}`).catch(() => null);
+          if (game) showOnlineGame(game);
+        }
+      }
+
       document.getElementById("startGame").addEventListener("click", () => {
+        if (onlinePollTimer) clearInterval(onlinePollTimer);
+        onlinePollTimer = null;
+        onlineGameId = null;
+        onlineGameData = null;
+        onlineColor = null;
+        document.getElementById("newGame").hidden = false;
+        playersView.classList.remove("active");
         menuView.classList.add("hidden");
         gameView.classList.add("active");
         resetGame();
       });
       document.getElementById("backToMenu").addEventListener("click", () => {
+        if (onlinePollTimer) clearInterval(onlinePollTimer);
+        onlinePollTimer = null;
+        onlineGameId = null;
+        onlineGameData = null;
+        onlineColor = null;
+        document.getElementById("newGame").hidden = false;
         gameView.classList.remove("active");
+        playersView.classList.remove("active");
         menuView.classList.remove("hidden");
+      });
+      document.getElementById("openPlayers").addEventListener("click", openPlayersView);
+      document.getElementById("playersBack").addEventListener("click", () => {
+        playersView.classList.remove("active");
+        menuView.classList.remove("hidden");
+      });
+      document.getElementById("playerSearchForm").addEventListener("submit", event => {
+        event.preventDefault();
+        const query = document.getElementById("playerSearchInput").value.trim();
+        if (query.length < 2) {
+          setOnlineMessage("Введи хотя бы 2 символа.");
+          return;
+        }
+        searchPlayers(query);
       });
       document.getElementById("newGame").addEventListener("click", resetGame);
       document.getElementById("flipBoard").addEventListener("click", () => {
@@ -975,6 +1463,12 @@
       });
 
       resetGame();
+      if (API_BASE_URL && telegram && telegram.initData) loadOnlineData();
+      else {
+        document.getElementById("menuPlayerHint").textContent = API_BASE_URL
+          ? "Открой Mini App из Telegram, чтобы войти"
+          : "Нужен общий сервер для рейтинга и друзей";
+      }
     })();
   </script>
 </body>
