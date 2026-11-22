@@ -18,7 +18,7 @@ BOT_TOKEN = os.environ.get("BOT_TOKEN", "").strip()
 DATABASE_PATH = os.environ.get("DATABASE_PATH", "data/chess.sqlite3")
 INIT_DATA_MAX_AGE = int(os.environ.get("INIT_DATA_MAX_AGE", "86400"))
 DEFAULT_ELO = 1000
-ELO_K = 32
+ELO_CHANGE = 25
 
 Path(DATABASE_PATH).parent.mkdir(parents=True, exist_ok=True)
 
@@ -84,6 +84,13 @@ def initialize_database():
                 black_delta INTEGER,
                 created_at INTEGER NOT NULL,
                 updated_at INTEGER NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS matchmaking_queue (
+                user_id INTEGER PRIMARY KEY REFERENCES players(telegram_id) ON DELETE CASCADE,
+                status TEXT NOT NULL DEFAULT 'waiting',
+                game_id TEXT REFERENCES games(id),
+                created_at INTEGER NOT NULL
             );
 
             CREATE INDEX IF NOT EXISTS idx_friend_to_status
@@ -212,11 +219,10 @@ def apply_elo(db, white_id, black_id, score_white):
     white = db.execute("SELECT elo FROM players WHERE telegram_id = ?", (white_id,)).fetchone()
     black = db.execute("SELECT elo FROM players WHERE telegram_id = ?", (black_id,)).fetchone()
     white_elo, black_elo = white["elo"], black["elo"]
-    expected_white = 1 / (1 + 10 ** ((black_elo - white_elo) / 400))
-    expected_black = 1 - expected_white
-    score_black = 1 - score_white
-    white_new = max(0, round(white_elo + ELO_K * (score_white - expected_white)))
-    black_new = max(0, round(black_elo + ELO_K * (score_black - expected_black)))
+    white_change = ELO_CHANGE if score_white == 1 else -ELO_CHANGE if score_white == 0 else 0
+    black_change = -white_change
+    white_new = max(0, white_elo + white_change)
+    black_new = max(0, black_elo + black_change)
     white_delta, black_delta = white_new - white_elo, black_new - black_elo
     db.execute(
         "UPDATE players SET elo = ?, games_played = games_played + 1, wins = wins + ? WHERE telegram_id = ?",
@@ -229,6 +235,84 @@ def apply_elo(db, white_id, black_id, score_white):
     return white_delta, black_delta
 
 
+@app.post("/api/matchmaking")
+def join_matchmaking(user_id: int = Depends(authenticated_user)):
+    now = int(time.time())
+    with connect() as db:
+        db.execute("BEGIN IMMEDIATE")
+        db.execute(
+            "DELETE FROM matchmaking_queue WHERE status = 'waiting' AND created_at < ?",
+            (now - 120,),
+        )
+
+        current = db.execute(
+            "SELECT * FROM matchmaking_queue WHERE user_id = ?",
+            (user_id,),
+        ).fetchone()
+        if current and current["status"] == "matched" and current["game_id"]:
+            game = db.execute("SELECT * FROM games WHERE id = ?", (current["game_id"],)).fetchone()
+            if game and game["status"] == "active":
+                return {"status": "matched", "game": game_json(db, game, user_id)}
+            db.execute(
+                "DELETE FROM matchmaking_queue WHERE game_id = ? OR user_id = ?",
+                (current["game_id"], user_id),
+            )
+            current = None
+
+        if not current:
+            db.execute(
+                """
+                INSERT INTO matchmaking_queue(user_id, status, game_id, created_at)
+                VALUES (?, 'waiting', NULL, ?)
+                ON CONFLICT(user_id) DO UPDATE SET status = 'waiting', game_id = NULL, created_at = excluded.created_at
+                """,
+                (user_id, now),
+            )
+
+        opponent = db.execute(
+            """
+            SELECT q.user_id FROM matchmaking_queue q
+            JOIN players p ON p.telegram_id = q.user_id
+            WHERE q.status = 'waiting' AND q.user_id <> ?
+            ORDER BY q.created_at ASC
+            LIMIT 1
+            """,
+            (user_id,),
+        ).fetchone()
+        if not opponent:
+            return {"status": "waiting"}
+
+        white_id, black_id = opponent["user_id"], user_id
+        game_id = uuid.uuid4().hex[:12]
+        board = chess.Board()
+        db.execute(
+            """
+            INSERT INTO games(id, white_id, black_id, status, fen, created_at, updated_at)
+            VALUES (?, ?, ?, 'active', ?, ?, ?)
+            """,
+            (game_id, white_id, black_id, board.fen(), now, now),
+        )
+        db.execute(
+            "UPDATE matchmaking_queue SET status = 'matched', game_id = ? WHERE user_id IN (?, ?)",
+            (game_id, white_id, black_id),
+        )
+        game = db.execute("SELECT * FROM games WHERE id = ?", (game_id,)).fetchone()
+        return {"status": "matched", "game": game_json(db, game, user_id)}
+
+
+@app.post("/api/matchmaking/cancel")
+def cancel_matchmaking(user_id: int = Depends(authenticated_user)):
+    with connect() as db:
+        current = db.execute(
+            "SELECT status FROM matchmaking_queue WHERE user_id = ?",
+            (user_id,),
+        ).fetchone()
+        if current and current["status"] == "matched":
+            return {"status": "matched"}
+        db.execute("DELETE FROM matchmaking_queue WHERE user_id = ?", (user_id,))
+        return {"status": "cancelled"}
+
+
 @app.get("/health")
 def health():
     return {"ok": True}
@@ -239,7 +323,7 @@ def authenticate(init_data: str = Header(default="", alias="X-Telegram-Init-Data
     user_id = authenticated_user(init_data)
     with connect() as db:
         row = db.execute("SELECT * FROM players WHERE telegram_id = ?", (user_id,)).fetchone()
-        return {"player": player_json(row), "elo_k": ELO_K}
+        return {"player": player_json(row), "elo_change": ELO_CHANGE}
 
 
 @app.get("/api/players")
