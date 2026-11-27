@@ -201,6 +201,13 @@ async def start_handler(message: Message, state: FSMContext) -> None:
         await message.answer("Произошла ошибка. Попробуйте еще раз позже.")
 
 
+@dp.message(Command("id"))
+async def id_handler(message: Message) -> None:
+    if not message.from_user:
+        return
+    await message.answer(f"Ваш Telegram ID: {message.from_user.id}")
+
+
 @dp.message(Command("cancel"))
 async def cancel_handler(message: Message, state: FSMContext) -> None:
     await state.clear()
