@@ -199,7 +199,7 @@ def build_main_keyboard(user_id: int | None = None) -> ReplyKeyboardMarkup:
                 )
             ]
         )
-    rows.append([KeyboardButton(text=LANGUAGE_BUTTON)])
+    rows.append([KeyboardButton(text=texts["lang_toggle"])])
     return ReplyKeyboardMarkup(keyboard=rows, resize_keyboard=True)
 
 
@@ -280,6 +280,16 @@ async def lang_callback(callback: CallbackQuery) -> None:
         tr(user_id, "lang_set"), reply_markup=build_main_keyboard(user_id)
     )
     await callback.answer()
+
+
+async def toggle_language(message: Message) -> None:
+    """Мгновенно переключает язык по кнопке в главном меню."""
+    user_id = uid_of(message)
+    if not user_id:
+        return
+    new_lang = "en" if get_lang(user_id) == "ru" else "ru"
+    set_lang(user_id, new_lang)
+    await message.answer(tr(user_id, "lang_set"), reply_markup=build_main_keyboard(user_id))
 
 
 @dp.message(Command("cancel"))
@@ -378,6 +388,7 @@ async def admin_button_name(message: Message, state: FSMContext) -> None:
         reserved.update(texts["menu"])
         reserved.add(texts["application_button"])
         reserved.add(texts["catalog_button"])
+        reserved.add(texts["lang_toggle"])
     if not name or len(name) > 64 or name in reserved:
         await message.answer(tr(user_id, "admin_unique"))
         return
@@ -601,6 +612,9 @@ async def text_router(message: Message, state: FSMContext) -> None:
             return
         lang = get_lang(user_id)
         texts = config_texts.TEXTS.get(lang, config_texts.TEXTS[config_texts.DEFAULT_LANG])
+        if text == texts["lang_toggle"]:
+            await toggle_language(message)
+            return
         if text == LANGUAGE_BUTTON:
             await lang_handler(message)
             return
