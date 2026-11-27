@@ -61,15 +61,16 @@
     .logo:hover .logo-mark { transform: rotate(12deg) scale(1.08); }
     .logo-mark .icon { width: 19px; height: 19px; }
     .top-actions { display: flex; align-items: center; gap: 9px; }
-    .design-toggle, .bag-button {
+    .design-toggle, .bag-button, .lang-toggle {
       display: inline-flex; height: 42px; align-items: center; justify-content: center; border: 1px solid var(--line);
       background: rgba(255,255,255,.78); backdrop-filter: blur(15px); transition: transform .3s var(--ease), border-color .25s, background .25s;
     }
     .design-toggle { gap: 8px; border-radius: 99px; padding: 0 14px; font-size: 11px; font-weight: 800; }
     .design-toggle .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 4px rgba(189,243,68,.25); }
+    .lang-toggle { width: 42px; border-radius: 50%; font-size: 11px; font-weight: 800; letter-spacing: -.02em; }
     .bag-button { position: relative; width: 42px; border-radius: 50%; }
-    .design-toggle:hover, .bag-button:hover { transform: translateY(-3px); border-color: #c4d69f; background: var(--paper); }
-    .design-toggle:active, .bag-button:active { transform: scale(.93); }
+    .design-toggle:hover, .bag-button:hover, .lang-toggle:hover { transform: translateY(-3px); border-color: #c4d69f; background: var(--paper); }
+    .design-toggle:active, .bag-button:active, .lang-toggle:active { transform: scale(.93); }
     .bag-count { position: absolute; top: -4px; right: -3px; display: grid; min-width: 18px; height: 18px; place-items: center; border: 2px solid var(--bg); border-radius: 99px; padding: 0 4px; background: var(--lime); font-size: 9px; font-weight: 800; }
     #app { view-transition-name: app; }
     .view { padding-bottom: 140px; }
@@ -308,12 +309,13 @@
   </svg>
 
   <header class="topbar shell">
-    <button class="logo" id="logo-button" type="button" aria-label="CRUMB — на главную">
+    <button class="logo" id="logo-button" type="button" data-i18n-aria="logoHome" aria-label="CRUMB — на главную">
       <span class="logo-mark"><svg class="icon"><use href="#i-spark"/></svg></span><span>CRUMB.</span>
     </button>
     <div class="top-actions">
-      <button class="design-toggle" id="design-toggle" type="button" aria-label="Переключить дизайн"><span class="status-dot"></span><span id="design-name">Air</span></button>
-      <button class="bag-button" id="bag-button" type="button" aria-label="Открыть корзину"><svg class="icon"><use href="#i-bag"/></svg><span class="bag-count" id="bag-count" hidden>0</span></button>
+      <button class="lang-toggle" id="lang-toggle" type="button" aria-label="Switch to English">EN</button>
+      <button class="design-toggle" id="design-toggle" type="button" data-i18n-aria="designToggle" aria-label="Переключить дизайн"><span class="status-dot"></span><span id="design-name">Air</span></button>
+      <button class="bag-button" id="bag-button" type="button" data-i18n-aria="bag" aria-label="Открыть корзину"><svg class="icon"><use href="#i-bag"/></svg><span class="bag-count" id="bag-count" hidden>0</span></button>
     </div>
   </header>
 
@@ -321,19 +323,19 @@
     <section class="view" id="home-view" aria-label="Главная">
       <div class="hero">
         <div class="hero-copy">
-          <p class="eyebrow">Демо · Telegram-бот + Mini App</p>
-          <h1>Счастье<br>в каждой<br><span class="accent">крошке.</span></h1>
-          <p class="hero-description">Печём печенье и круассаны небольшими партиями. Выбирай любимое — заказ улетит прямо в Telegram-бота.</p>
+          <p class="eyebrow" data-i18n="eyebrow">Демо · Telegram-бот + Mini App</p>
+          <h1 data-i18n-html="heroTitle">Счастье<br>в каждой<br><span class="accent">крошке.</span></h1>
+          <p class="hero-description" data-i18n="heroDescription">Печём печенье и круассаны небольшими партиями. Выбирай любимое — заказ улетит прямо в Telegram-бота.</p>
           <div>
-            <button class="primary-button" id="hero-catalog" type="button">Выбрать своё <span class="button-icon"><svg class="icon"><use href="#i-arrow"/></svg></span></button>
-            <span class="hero-note"><svg class="icon"><use href="#i-heart"/></svg>Тёплое, как надо</span>
+            <button class="primary-button" id="hero-catalog" type="button"><span data-i18n="heroCta">Выбрать своё</span> <span class="button-icon"><svg class="icon"><use href="#i-arrow"/></svg></span></button>
+            <span class="hero-note"><svg class="icon"><use href="#i-heart"/></svg><span data-i18n="heroNote">Тёплое, как надо</span></span>
           </div>
         </div>
         <div class="hero-visual" id="hero-visual">
           <div class="lime-field"></div>
-          <div class="hero-photo-wrap"><img class="hero-photo" id="hero-photo" src="https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=1000&q=88&auto=format&fit=crop" alt="Свежее печенье с кусочками шоколада" fetchpriority="high"></div>
+          <div class="hero-photo-wrap"><img class="hero-photo" id="hero-photo" src="https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=1000&q=88&auto=format&fit=crop" data-i18n-alt="heroPhotoAlt" alt="Свежее печенье с кусочками шоколада" fetchpriority="high"></div>
           <div class="hero-sticker" aria-hidden="true"><svg class="icon"><use href="#i-spark"/></svg></div>
-          <div class="hero-label"><small>FRESH FROM THE OVEN</small><strong>Тёплое. Хрустящее.<br>Твоё.</strong><div class="mini-line"></div></div>
+          <div class="hero-label"><small>FRESH FROM THE OVEN</small><strong data-i18n-html="heroLabel">Тёплое. Хрустящее.<br>Твоё.</strong><div class="mini-line"></div></div>
         </div>
       </div>
       <div class="ticker" aria-hidden="true"><div class="ticker-track">
@@ -343,52 +345,52 @@
         <span>FRESH <i class="ticker-star"></i> WARM <i class="ticker-star"></i> SWEET <i class="ticker-star"></i> REPEAT <i class="ticker-star"></i></span>
       </div></div>
       <div class="benefits">
-        <div class="benefit"><span class="benefit-icon"><svg class="icon"><use href="#i-spark"/></svg></span><div><strong>Печём каждое утро</strong><small>Свежая выпечка небольшими партиями</small></div></div>
-        <div class="benefit"><span class="benefit-icon"><svg class="icon"><use href="#i-heart"/></svg></span><div><strong>С любовью к деталям</strong><small>Много шоколада и никакой суеты</small></div></div>
-        <div class="benefit"><span class="benefit-icon"><svg class="icon"><use href="#i-box"/></svg></span><div><strong>Заказ прямо в Telegram</strong><small>Собери коробку за пару нажатий</small></div></div>
+        <div class="benefit"><span class="benefit-icon"><svg class="icon"><use href="#i-spark"/></svg></span><div><strong data-i18n="benefit1Title">Печём каждое утро</strong><small data-i18n="benefit1Text">Свежая выпечка небольшими партиями</small></div></div>
+        <div class="benefit"><span class="benefit-icon"><svg class="icon"><use href="#i-heart"/></svg></span><div><strong data-i18n="benefit2Title">С любовью к деталям</strong><small data-i18n="benefit2Text">Много шоколада и никакой суеты</small></div></div>
+        <div class="benefit"><span class="benefit-icon"><svg class="icon"><use href="#i-box"/></svg></span><div><strong data-i18n="benefit3Title">Заказ прямо в Telegram</strong><small data-i18n="benefit3Text">Собери коробку за пару нажатий</small></div></div>
       </div>
-      <div class="section-heading"><h2>Хиты пекарни</h2><button class="text-button" id="featured-all" type="button">Весь каталог <svg class="icon"><use href="#i-arrow"/></svg></button></div>
+      <div class="section-heading"><h2 data-i18n="hits">Хиты пекарни</h2><button class="text-button" id="featured-all" type="button"><span data-i18n="allCatalog">Весь каталог</span> <svg class="icon"><use href="#i-arrow"/></svg></button></div>
       <div class="grid featured-grid" id="featured-grid"></div>
     </section>
 
     <section class="view" id="catalog-view" aria-label="Каталог" hidden>
-      <div class="catalog-heading"><h1>Выбирай<br><span class="accent">вкусное.</span></h1><p>Собери коробку счастья: печенье к кофе, круассан к завтраку и что-нибудь просто для настроения.</p></div>
+      <div class="catalog-heading"><h1 data-i18n-html="catalogTitle">Выбирай<br><span class="accent">вкусное.</span></h1><p data-i18n="catalogDescription">Собери коробку счастья: печенье к кофе, круассан к завтраку и что-нибудь просто для настроения.</p></div>
       <div class="catalog-tools">
-        <label class="search-box"><svg class="icon"><use href="#i-search"/></svg><input id="search-input" type="search" placeholder="Печенье, круассан, торт..." autocomplete="off" aria-label="Поиск по каталогу"></label>
+        <label class="search-box"><svg class="icon"><use href="#i-search"/></svg><input id="search-input" type="search" data-i18n-placeholder="searchPlaceholder" data-i18n-aria="searchAria" placeholder="Печенье, круассан, торт..." autocomplete="off" aria-label="Поиск по каталогу"></label>
         <nav class="categories" id="categories" aria-label="Категории"></nav>
       </div>
-      <div class="catalog-meta"><strong>Коллекция</strong><span id="catalog-count">0 позиций</span></div>
+      <div class="catalog-meta"><strong data-i18n="collection">Коллекция</strong><span id="catalog-count">0 позиций</span></div>
       <div class="grid" id="catalog-grid"></div>
     </section>
-    <footer class="footer">CRUMB. · демо-образец Telegram-бота и Mini App · <a href="https://unsplash.com/license" target="_blank" rel="noopener noreferrer">фото Unsplash</a></footer>
+    <footer class="footer"><span data-i18n="footerText">CRUMB. · демо-образец Telegram-бота и Mini App · </span><a href="https://unsplash.com/license" target="_blank" rel="noopener noreferrer" data-i18n="footerPhoto">фото Unsplash</a></footer>
   </main>
 
   <div class="cart-dock" id="cart-dock">
     <div class="dock-copy"><small id="dock-count">0 позиций</small><strong id="dock-total">0 ₽</strong></div>
-    <button class="dock-checkout" id="dock-checkout" type="button">Оформить <svg class="icon"><use href="#i-arrow"/></svg></button>
+    <button class="dock-checkout" id="dock-checkout" type="button"><span data-i18n="checkoutShort">Оформить</span> <svg class="icon"><use href="#i-arrow"/></svg></button>
   </div>
   <nav class="bottom-nav" aria-label="Основная навигация">
-    <button class="nav-button active" id="nav-home" type="button" aria-current="page"><svg class="icon"><use href="#i-home"/></svg>Главная</button>
-    <button class="nav-button" id="nav-catalog" type="button"><svg class="icon"><use href="#i-grid"/></svg>Каталог</button>
+    <button class="nav-button active" id="nav-home" type="button" aria-current="page"><svg class="icon"><use href="#i-home"/></svg><span data-i18n="home">Главная</span></button>
+    <button class="nav-button" id="nav-catalog" type="button"><svg class="icon"><use href="#i-grid"/></svg><span data-i18n="catalog">Каталог</span></button>
   </nav>
 
   <dialog id="checkout-dialog" aria-labelledby="checkout-title">
     <div class="sheet-handle"></div>
     <form class="sheet-content" id="order-form">
-      <div class="sheet-head"><div><p class="sheet-kicker" id="checkout-kicker">Шаг 1 из 2</p><h2 id="checkout-title">Твой заказ</h2></div><button class="close-button" id="close-checkout" type="button" aria-label="Закрыть"><svg class="icon"><use href="#i-close"/></svg></button></div>
+      <div class="sheet-head"><div><p class="sheet-kicker" id="checkout-kicker">Шаг 1 из 2</p><h2 id="checkout-title">Твой заказ</h2></div><button class="close-button" id="close-checkout" type="button" data-i18n-aria="close" aria-label="Закрыть"><svg class="icon"><use href="#i-close"/></svg></button></div>
       <div class="stepper" aria-hidden="true"><span class="active" id="step-one"></span><span id="step-two"></span></div>
       <section id="cart-step">
         <div class="cart-lines" id="cart-lines"></div>
-        <div class="order-total"><span>Итого</span><strong id="checkout-total">0 ₽</strong></div>
-        <button class="primary-button sheet-primary" id="to-details" type="button">Продолжить <span class="button-icon"><svg class="icon"><use href="#i-arrow"/></svg></span></button>
+        <div class="order-total"><span data-i18n="total">Итого</span><strong id="checkout-total">0 ₽</strong></div>
+        <button class="primary-button sheet-primary" id="to-details" type="button"><span data-i18n="continue">Продолжить</span> <span class="button-icon"><svg class="icon"><use href="#i-arrow"/></svg></span></button>
       </section>
       <section id="details-step" hidden>
-        <label class="form-field"><span>Как к тебе обращаться?</span><input id="customer-name" name="name" autocomplete="name" maxlength="120" placeholder="Твоё имя" required></label>
-        <label class="form-field"><span>Комментарий к заказу</span><textarea id="customer-comment" name="comment" maxlength="1000" placeholder="Пожелания, удобное время связи — по желанию"></textarea></label>
-        <div class="order-total"><span>К оплате после подтверждения</span><strong id="details-total">0 ₽</strong></div>
-        <button class="primary-button sheet-primary" id="submit-order" type="submit">Отправить заказ <span class="button-icon"><svg class="icon"><use href="#i-check"/></svg></span></button>
-        <button class="sheet-secondary" id="back-to-cart" type="button">← Вернуться к заказу</button>
-        <p class="checkout-note"><svg class="icon"><use href="#i-lock"/></svg>Данные уйдут только менеджеру этого бота</p>
+        <label class="form-field"><span data-i18n="nameLabel">Как к тебе обращаться?</span><input id="customer-name" name="name" autocomplete="name" maxlength="120" data-i18n-placeholder="namePlaceholder" placeholder="Твоё имя" required></label>
+        <label class="form-field"><span data-i18n="commentLabel">Комментарий к заказу</span><textarea id="customer-comment" name="comment" maxlength="1000" data-i18n-placeholder="commentPlaceholder" placeholder="Пожелания, удобное время связи — по желанию"></textarea></label>
+        <div class="order-total"><span data-i18n="payAfter">К оплате после подтверждения</span><strong id="details-total">0 ₽</strong></div>
+        <button class="primary-button sheet-primary" id="submit-order" type="submit"><span data-i18n="submitOrder">Отправить заказ</span> <span class="button-icon"><svg class="icon"><use href="#i-check"/></svg></span></button>
+        <button class="sheet-secondary" id="back-to-cart" type="button" data-i18n="backToCart">← Вернуться к заказу</button>
+        <p class="checkout-note"><svg class="icon"><use href="#i-lock"/></svg><span data-i18n="checkoutNote">Данные уйдут только менеджеру этого бота</span></p>
       </section>
     </form>
   </dialog>
@@ -398,13 +400,74 @@
     // Позиции каталога меняются здесь. icon оставлен для совместимости шаблона;
     // image — ссылка на фотографию товара. Сейчас использованы фото Unsplash.
     const CATALOG_ITEMS = [
-      { id: "choco-cookie", category: "Печенье", title: "Печенье «Много шоколада»", desc: "Хрустящий край, мягкая середина и морская соль.", price: 390, icon: "spark", tag: "Bestseller", image: "https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=800&q=85&auto=format&fit=crop" },
-      { id: "classic-cookie", category: "Печенье", title: "Печенье «Классика»", desc: "То самое домашнее — с кусочками шоколада.", price: 350, icon: "spark", tag: "Fresh batch", image: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=800&q=85&auto=format&fit=crop" },
-      { id: "croissant", category: "Выпечка", title: "Круассан сливочный", desc: "Слоёный, хрустящий и ещё немного тёплый.", price: 290, icon: "spark", tag: "Every morning", image: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=800&q=85&auto=format&fit=crop" },
-      { id: "cupcake", category: "Десерты", title: "Капкейк «Вечеринка»", desc: "Нежный бисквит, крем и повод улыбнуться.", price: 320, icon: "heart", tag: "Mood maker", image: "https://images.unsplash.com/photo-1486427944299-d1955d23e34d?w=800&q=85&auto=format&fit=crop" },
-      { id: "choco-cake", category: "Десерты", title: "Торт «Шоколадный»", desc: "Для большого повода или очень хорошего дня.", price: 2490, icon: "heart", tag: "Celebration", image: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=800&q=85&auto=format&fit=crop" },
-      { id: "sourdough", category: "Выпечка", title: "Хлеб на закваске", desc: "Плотный мякиш и ароматная хрустящая корочка.", price: 420, icon: "box", tag: "Slow made", image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&q=85&auto=format&fit=crop" }
+      { id: "choco-cookie", category: "Печенье", title: "Печенье «Много шоколада»", desc: "Хрустящий край, мягкая середина и морская соль.", price: 390, icon: "spark", tag: "Bestseller", image: "https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=800&q=85&auto=format&fit=crop", en: { category: "Cookies", title: "Chocolate chunk cookie", desc: "Crispy edges, soft centre and a pinch of sea salt." } },
+      { id: "classic-cookie", category: "Печенье", title: "Печенье «Классика»", desc: "То самое домашнее — с кусочками шоколада.", price: 350, icon: "spark", tag: "Fresh batch", image: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=800&q=85&auto=format&fit=crop", en: { category: "Cookies", title: "Classic cookie", desc: "That homemade cookie — with chocolate chunks." } },
+      { id: "croissant", category: "Выпечка", title: "Круассан сливочный", desc: "Слоёный, хрустящий и ещё немного тёплый.", price: 290, icon: "spark", tag: "Every morning", image: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=800&q=85&auto=format&fit=crop", en: { category: "Pastries", title: "Butter croissant", desc: "Flaky, crisp and still a little warm." } },
+      { id: "cupcake", category: "Десерты", title: "Капкейк «Вечеринка»", desc: "Нежный бисквит, крем и повод улыбнуться.", price: 320, icon: "heart", tag: "Mood maker", image: "https://images.unsplash.com/photo-1486427944299-d1955d23e34d?w=800&q=85&auto=format&fit=crop", en: { category: "Desserts", title: "Party cupcake", desc: "Soft sponge, cream and a reason to smile." } },
+      { id: "choco-cake", category: "Десерты", title: "Торт «Шоколадный»", desc: "Для большого повода или очень хорошего дня.", price: 2490, icon: "heart", tag: "Celebration", image: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=800&q=85&auto=format&fit=crop", en: { category: "Desserts", title: "Chocolate cake", desc: "For a big occasion or a very good day." } },
+      { id: "sourdough", category: "Выпечка", title: "Хлеб на закваске", desc: "Плотный мякиш и ароматная хрустящая корочка.", price: 420, icon: "box", tag: "Slow made", image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&q=85&auto=format&fit=crop", en: { category: "Pastries", title: "Sourdough bread", desc: "Dense crumb and a fragrant crisp crust." } }
     ];
+
+    const I18N = {
+      ru: {
+        title: "CRUMB — демо Telegram-бота пекарни", logoHome: "CRUMB — на главную",
+        designToggle: "Дизайн {design}. Переключить", bag: "Открыть корзину", langToggle: "Переключиться на {target}",
+        eyebrow: "Демо · Telegram-бот + Mini App",
+        heroTitle: 'Счастье<br>в каждой<br><span class="accent">крошке.</span>',
+        heroDescription: "Печём печенье и круассаны небольшими партиями. Выбирай любимое — заказ улетит прямо в Telegram-бота.",
+        heroCta: "Выбрать своё", heroNote: "Тёплое, как надо", heroPhotoAlt: "Свежее печенье с кусочками шоколада",
+        heroLabel: "Тёплое. Хрустящее.<br>Твоё.",
+        benefit1Title: "Печём каждое утро", benefit1Text: "Свежая выпечка небольшими партиями",
+        benefit2Title: "С любовью к деталям", benefit2Text: "Много шоколада и никакой суеты",
+        benefit3Title: "Заказ прямо в Telegram", benefit3Text: "Собери коробку за пару нажатий",
+        hits: "Хиты пекарни", allCatalog: "Весь каталог",
+        catalogTitle: 'Выбирай<br><span class="accent">вкусное.</span>',
+        catalogDescription: "Собери коробку счастья: печенье к кофе, круассан к завтраку и что-нибудь просто для настроения.",
+        searchPlaceholder: "Печенье, круассан, торт...", searchAria: "Поиск по каталогу",
+        all: "Все", collection: "Коллекция", footerText: "CRUMB. · демо-образец Telegram-бота и Mini App · ", footerPhoto: "фото Unsplash",
+        checkoutShort: "Оформить", home: "Главная", catalog: "Каталог", close: "Закрыть", total: "Итого", continue: "Продолжить",
+        nameLabel: "Как к тебе обращаться?", namePlaceholder: "Твоё имя",
+        commentLabel: "Комментарий к заказу", commentPlaceholder: "Пожелания, удобное время связи — по желанию",
+        payAfter: "К оплате после подтверждения", submitOrder: "Отправить заказ", backToCart: "← Вернуться к заказу",
+        checkoutNote: "Данные уйдут только менеджеру этого бота",
+        emptyCatalogTitle: "Здесь пока тихо", emptyCatalogText: "Попробуй другой запрос или категорию.",
+        emptyCartTitle: "Корзина пока пуста", emptyCartText: "Выбери что-нибудь в каталоге — здесь появится заказ.",
+        emptyCartToast: "Сначала добавь что-нибудь в корзину", added: "{title} — в корзине",
+        demoToast: "Демо готово: отправка заказа работает внутри Telegram", sendError: "Не получилось отправить. Попробуй ещё раз",
+        cartTitle: "Твой заказ", detailsTitle: "Пара деталей", step1: "Шаг 1 из 2", step2: "Шаг 2 из 2",
+        add: "Добавить {title}", removeOne: "Убрать одну позицию {title}", addMore: "Добавить ещё {title}",
+        decrease: "Уменьшить {title}", increase: "Увеличить {title}"
+      },
+      en: {
+        title: "CRUMB — Telegram bot & Mini App demo", logoHome: "CRUMB — go home",
+        designToggle: "Design {design}. Switch", bag: "Open cart", langToggle: "Switch to {target}",
+        eyebrow: "Demo · Telegram bot + Mini App",
+        heroTitle: 'Joy<br>in every<br><span class="accent">crumb.</span>',
+        heroDescription: "We bake cookies and croissants in small batches. Pick your favourites — your order goes straight to the Telegram bot.",
+        heroCta: "Pick yours", heroNote: "Warm, just right", heroPhotoAlt: "Fresh chocolate chip cookies",
+        heroLabel: "Warm. Crispy.<br>All yours.",
+        benefit1Title: "Baked every morning", benefit1Text: "Fresh pastries in small batches",
+        benefit2Title: "Details matter", benefit2Text: "Lots of chocolate, no rush",
+        benefit3Title: "Order inside Telegram", benefit3Text: "Build a box in a couple of taps",
+        hits: "Bakery favourites", allCatalog: "Full catalog",
+        catalogTitle: 'Choose<br><span class="accent">something sweet.</span>',
+        catalogDescription: "Build a box of happiness: cookies for coffee, a croissant for breakfast, and something just for the mood.",
+        searchPlaceholder: "Cookie, croissant, cake...", searchAria: "Search catalog",
+        all: "All", collection: "Collection", footerText: "CRUMB. · Telegram bot & Mini App demo · ", footerPhoto: "Unsplash photos",
+        checkoutShort: "Checkout", home: "Home", catalog: "Catalog", close: "Close", total: "Total", continue: "Continue",
+        nameLabel: "What should we call you?", namePlaceholder: "Your name",
+        commentLabel: "Order note", commentPlaceholder: "Wishes, a good time to call — optional",
+        payAfter: "Pay after confirmation", submitOrder: "Send order", backToCart: "← Back to order",
+        checkoutNote: "Your data goes only to this bot's manager",
+        emptyCatalogTitle: "Nothing here yet", emptyCatalogText: "Try another search or category.",
+        emptyCartTitle: "Your cart is empty", emptyCartText: "Pick something in the catalog — your order will appear here.",
+        emptyCartToast: "Add something to the cart first", added: "{title} — added to cart",
+        demoToast: "Demo ready: orders work inside Telegram", sendError: "Couldn't send. Try again",
+        cartTitle: "Your order", detailsTitle: "Just a couple of details", step1: "Step 1 of 2", step2: "Step 2 of 2",
+        add: "Add {title}", removeOne: "Remove one {title}", addMore: "Add more {title}",
+        decrease: "Decrease {title}", increase: "Increase {title}"
+      }
+    };
 
     const tg = window.Telegram && window.Telegram.WebApp;
     const mainButton = tg && tg.MainButton;
@@ -417,6 +480,14 @@
     let selectedCategory = "Все";
     let checkoutStep = "cart";
     let toastTimer;
+    let lang = "ru";
+    try {
+      const savedLang = localStorage.getItem("crumb-lang");
+      const tgLang = tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.language_code;
+      lang = savedLang === "en" || savedLang === "ru"
+        ? savedLang
+        : (String(tgLang || "").toLowerCase().startsWith("en") ? "en" : "ru");
+    } catch (_) { /* приватный режим */ }
 
     if (tg) {
       document.body.classList.add("telegram");
@@ -424,19 +495,65 @@
       tg.expand();
     }
 
+    function t(key, vars = {}) {
+      const table = I18N[lang] || I18N.ru;
+      let value = table[key] || I18N.ru[key] || key;
+      for (const [name, replacement] of Object.entries(vars)) value = value.replaceAll(`{${name}}`, replacement);
+      return value;
+    }
+    function localizedItem(item) {
+      if (lang !== "en" || !item.en) return item;
+      return { ...item, ...item.en };
+    }
+    function categoryNames() {
+      return [t("all"), ...new Set(CATALOG_ITEMS.map(item => localizedItem(item).category))];
+    }
+    function applyLanguage(next) {
+      lang = next === "en" ? "en" : "ru";
+      document.documentElement.lang = lang;
+      document.title = t("title");
+      document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = t(el.dataset.i18n); });
+      document.querySelectorAll("[data-i18n-html]").forEach(el => { el.innerHTML = t(el.dataset.i18nHtml); });
+      document.querySelectorAll("[data-i18n-placeholder]").forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
+      document.querySelectorAll("[data-i18n-aria]").forEach(el => { el.setAttribute("aria-label", t(el.dataset.i18nAria)); });
+      document.querySelectorAll("[data-i18n-alt]").forEach(el => { el.alt = t(el.dataset.i18nAlt); });
+      const langButton = byId("lang-toggle");
+      langButton.textContent = lang === "ru" ? "EN" : "RU";
+      langButton.setAttribute("aria-label", t("langToggle", { target: lang === "ru" ? "English" : "Русский" }));
+      setDesign(document.body.dataset.design || "air");
+    }
+    function toggleLanguage() {
+      const before = categoryNames();
+      const selectedIndex = Math.max(0, before.indexOf(selectedCategory));
+      const next = lang === "ru" ? "en" : "ru";
+      lang = next;
+      try { localStorage.setItem("crumb-lang", next); } catch (_) { /* приватный режим */ }
+      selectedCategory = categoryNames()[selectedIndex] || t("all");
+      applyLanguage(next);
+      renderFeatured();
+      renderCategories();
+      renderCatalog();
+      updateCart();
+      if (dialog.open) { renderCartLines(); showCheckoutStep(checkoutStep); }
+    }
+
     function money(value) {
-      return new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(value) + " ₽";
+      return new Intl.NumberFormat(lang === "en" ? "en-US" : "ru-RU", { maximumFractionDigits: 0 }).format(value) + " ₽";
     }
     function icon(name) {
       return `<svg class="icon" aria-hidden="true"><use href="#i-${name}"/></svg>`;
     }
     function chosenItems() {
       return CATALOG_ITEMS.filter(item => quantities.has(item.id))
-        .map(item => ({ id: item.id, title: item.title, price: item.price, quantity: quantities.get(item.id) }));
+        .map(item => {
+          const source = localizedItem(item);
+          return { id: item.id, title: source.title, price: item.price, quantity: quantities.get(item.id) };
+        });
     }
     function itemCount() { return chosenItems().reduce((sum, item) => sum + item.quantity, 0); }
     function totalPrice() { return chosenItems().reduce((sum, item) => sum + item.price * item.quantity, 0); }
     function plural(count) {
+      if (lang === "en") return count === 1 ? "item" : "items";
       const mod10 = count % 10;
       const mod100 = count % 100;
       if (mod10 === 1 && mod100 !== 11) return "позиция";
@@ -480,11 +597,11 @@
           <p class="product-desc">${item.desc}</p>
           <div class="product-bottom">
             <span class="price">${money(item.price)}</span>
-            <button class="add-button" type="button" aria-label="Добавить ${item.title}">+</button>
+            <button class="add-button" type="button" aria-label="${t("add", { title: item.title })}">+</button>
             <div class="quantity-control" hidden>
-              <button class="qty-button minus" type="button" aria-label="Убрать одну позицию ${item.title}">−</button>
+              <button class="qty-button minus" type="button" aria-label="${t("removeOne", { title: item.title })}">−</button>
               <span class="qty-label">0</span>
-              <button class="qty-button plus" type="button" aria-label="Добавить ещё ${item.title}">+</button>
+              <button class="qty-button plus" type="button" aria-label="${t("addMore", { title: item.title })}">+</button>
             </div>
           </div>
         </div>`;
@@ -511,21 +628,22 @@
     }
     function renderFeatured() {
       const container = byId("featured-grid");
-      container.replaceChildren(...[CATALOG_ITEMS[0], CATALOG_ITEMS[2]].map((item, index) => createProductCard(item, index)));
+      container.replaceChildren(...[0, 2].map(index => localizedItem(CATALOG_ITEMS[index])).map((item, index) => createProductCard(item, index)));
       syncProductCards();
     }
     function filteredItems() {
-      const query = byId("search-input").value.trim().toLocaleLowerCase("ru");
-      return CATALOG_ITEMS.filter(item =>
-        (selectedCategory === "Все" || item.category === selectedCategory) &&
-        (!query || `${item.title} ${item.desc} ${item.category}`.toLocaleLowerCase("ru").includes(query))
+      const locale = lang === "en" ? "en" : "ru";
+      const query = byId("search-input").value.trim().toLocaleLowerCase(locale);
+      return CATALOG_ITEMS.map(localizedItem).filter(item =>
+        (selectedCategory === t("all") || item.category === selectedCategory) &&
+        (!query || `${item.title} ${item.desc} ${item.category}`.toLocaleLowerCase(locale).includes(query))
       );
     }
     function renderCatalog() {
       const items = filteredItems();
       byId("catalog-count").textContent = `${items.length} ${plural(items.length)}`;
       if (!items.length) {
-        catalogGrid.innerHTML = '<div class="empty"><strong>Здесь пока тихо</strong>Попробуй другой запрос или категорию.</div>';
+        catalogGrid.innerHTML = `<div class="empty"><strong>${t("emptyCatalogTitle")}</strong>${t("emptyCatalogText")}</div>`;
         return;
       }
       catalogGrid.replaceChildren(...items.map((item, index) => createProductCard(item, index)));
@@ -533,7 +651,7 @@
       animateCards(catalogGrid);
     }
     function renderCategories() {
-      const names = ["Все", ...new Set(CATALOG_ITEMS.map(item => item.category))];
+      const names = categoryNames();
       byId("categories").replaceChildren(...names.map(name => {
         const button = document.createElement("button");
         button.type = "button";
@@ -558,7 +676,7 @@
       updateCart();
       if (dialog.open) renderCartLines();
       const item = CATALOG_ITEMS.find(product => product.id === id);
-      if (delta > 0 && item) showToast(`${item.title} — в корзине`);
+      if (delta > 0 && item) showToast(t("added", { title: localizedItem(item).title }));
       try { if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light"); } catch (_) { /* тактильный отклик необязателен */ }
     }
     function updateCart() {
@@ -574,7 +692,7 @@
       document.body.classList.toggle("main-active", Boolean(tg && count > 0 && !dialog.open));
       if (!mainButton) return;
       if (count > 0 && !dialog.open) {
-        mainButton.setText(`Оформить · ${money(total)}`);
+        mainButton.setText(`${t("checkoutShort")} · ${money(total)}`);
         mainButton.show();
         mainButton.enable();
       } else mainButton.hide();
@@ -602,7 +720,7 @@
       const next = design === "pulse" ? "pulse" : "air";
       document.body.dataset.design = next;
       byId("design-name").textContent = next === "pulse" ? "Pulse" : "Air";
-      byId("design-toggle").setAttribute("aria-label", `Дизайн ${next === "pulse" ? "Pulse" : "Air"}. Переключить`);
+      byId("design-toggle").setAttribute("aria-label", t("designToggle", { design: next === "pulse" ? "Pulse" : "Air" }));
       try { localStorage.setItem("crumb-design", next); } catch (_) { /* приватный режим */ }
     }
     let savedDesign = "air";
@@ -614,8 +732,8 @@
       const isDetails = step === "details";
       byId("cart-step").hidden = isDetails;
       byId("details-step").hidden = !isDetails;
-      byId("checkout-title").textContent = isDetails ? "Пара деталей" : "Твой заказ";
-      byId("checkout-kicker").textContent = isDetails ? "Шаг 2 из 2" : "Шаг 1 из 2";
+      byId("checkout-title").textContent = isDetails ? t("detailsTitle") : t("cartTitle");
+      byId("checkout-kicker").textContent = isDetails ? t("step2") : t("step1");
       byId("step-two").classList.toggle("active", isDetails);
       byId("details-total").textContent = money(totalPrice());
       const section = byId(isDetails ? "details-step" : "cart-step");
@@ -627,7 +745,7 @@
       byId("checkout-total").textContent = money(totalPrice());
       byId("to-details").disabled = items.length === 0;
       if (!items.length) {
-        byId("cart-lines").innerHTML = '<div class="empty"><strong>Корзина пока пуста</strong>Выбери что-нибудь в каталоге — здесь появится заказ.</div>';
+        byId("cart-lines").innerHTML = `<div class="empty"><strong>${t("emptyCartTitle")}</strong>${t("emptyCartText")}</div>`;
         return;
       }
       byId("cart-lines").replaceChildren(...items.map(item => {
@@ -635,7 +753,7 @@
         const line = document.createElement("article");
         line.className = "cart-line";
         line.innerHTML = `<img src="${product.image}" alt="" loading="lazy"><div><h3>${item.title}</h3><p>${money(item.price * item.quantity)}</p></div>
-          <div class="quantity-control"><button class="qty-button minus" type="button" aria-label="Уменьшить ${item.title}">−</button><span class="qty-label">${item.quantity}</span><button class="qty-button plus" type="button" aria-label="Увеличить ${item.title}">+</button></div>`;
+          <div class="quantity-control"><button class="qty-button minus" type="button" aria-label="${t("decrease", { title: item.title })}">−</button><span class="qty-label">${item.quantity}</span><button class="qty-button plus" type="button" aria-label="${t("increase", { title: item.title })}">+</button></div>`;
         line.querySelector(".minus").addEventListener("click", () => changeQuantity(item.id, -1));
         line.querySelector(".plus").addEventListener("click", () => changeQuantity(item.id, 1));
         return line;
@@ -643,7 +761,7 @@
     }
     function openCheckout() {
       if (!itemCount()) {
-        showToast("Сначала добавь что-нибудь в корзину");
+        showToast(t("emptyCartToast"));
         if (currentView !== "catalog") navigate("catalog");
         return;
       }
@@ -658,6 +776,7 @@
     byId("nav-catalog").addEventListener("click", () => navigate("catalog"));
     byId("hero-catalog").addEventListener("click", () => navigate("catalog"));
     byId("featured-all").addEventListener("click", () => navigate("catalog"));
+    byId("lang-toggle").addEventListener("click", toggleLanguage);
     byId("design-toggle").addEventListener("click", () => transition(() => setDesign(document.body.dataset.design === "air" ? "pulse" : "air")));
     byId("search-input").addEventListener("input", renderCatalog);
     byId("bag-button").addEventListener("click", openCheckout);
@@ -682,7 +801,7 @@
         comment: byId("customer-comment").value.trim()
       };
       if (!tg || typeof tg.sendData !== "function") {
-        showToast("Демо готово: отправка заказа работает внутри Telegram");
+        showToast(t("demoToast"));
         return;
       }
       const submit = byId("submit-order");
@@ -693,7 +812,7 @@
         tg.close();
       } catch (error) {
         console.error("Не удалось отправить заказ", error);
-        showToast("Не получилось отправить. Попробуй ещё раз");
+        showToast(t("sendError"));
       } finally {
         submit.disabled = false;
       }
@@ -713,6 +832,8 @@
       heroVisual.style.setProperty("--py", "0px");
     });
 
+    applyLanguage(lang);
+    if (lang === "en" && selectedCategory === "Все") selectedCategory = t("all");
     renderFeatured();
     renderCategories();
     renderCatalog();
