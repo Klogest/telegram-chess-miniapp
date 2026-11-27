@@ -357,7 +357,7 @@
       <div class="catalog-heading"><h1 data-i18n-html="catalogTitle">Выбирай<br><span class="accent">вкусное.</span></h1><p data-i18n="catalogDescription">Собери коробку счастья: печенье к кофе, круассан к завтраку и что-нибудь просто для настроения.</p></div>
       <div class="catalog-tools">
         <label class="search-box"><svg class="icon"><use href="#i-search"/></svg><input id="search-input" type="search" data-i18n-placeholder="searchPlaceholder" data-i18n-aria="searchAria" placeholder="Печенье, круассан, торт..." autocomplete="off" aria-label="Поиск по каталогу"></label>
-        <nav class="categories" id="categories" aria-label="Категории"></nav>
+        <nav class="categories" id="categories" data-i18n-aria="categoriesAria" aria-label="Категории"></nav>
       </div>
       <div class="catalog-meta"><strong data-i18n="collection">Коллекция</strong><span id="catalog-count">0 позиций</span></div>
       <div class="grid" id="catalog-grid"></div>
@@ -369,7 +369,7 @@
     <div class="dock-copy"><small id="dock-count">0 позиций</small><strong id="dock-total">0 ₽</strong></div>
     <button class="dock-checkout" id="dock-checkout" type="button"><span data-i18n="checkoutShort">Оформить</span> <svg class="icon"><use href="#i-arrow"/></svg></button>
   </div>
-  <nav class="bottom-nav" aria-label="Основная навигация">
+  <nav class="bottom-nav" data-i18n-aria="navAria" aria-label="Основная навигация">
     <button class="nav-button active" id="nav-home" type="button" aria-current="page"><svg class="icon"><use href="#i-home"/></svg><span data-i18n="home">Главная</span></button>
     <button class="nav-button" id="nav-catalog" type="button"><svg class="icon"><use href="#i-grid"/></svg><span data-i18n="catalog">Каталог</span></button>
   </nav>
@@ -424,7 +424,7 @@
         catalogTitle: 'Выбирай<br><span class="accent">вкусное.</span>',
         catalogDescription: "Собери коробку счастья: печенье к кофе, круассан к завтраку и что-нибудь просто для настроения.",
         searchPlaceholder: "Печенье, круассан, торт...", searchAria: "Поиск по каталогу",
-        all: "Все", collection: "Коллекция", footerText: "CRUMB. · демо-образец Telegram-бота и Mini App · ", footerPhoto: "фото Unsplash",
+        all: "Все", collection: "Коллекция", navAria: "Основная навигация", categoriesAria: "Категории", footerText: "CRUMB. · демо-образец Telegram-бота и Mini App · ", footerPhoto: "фото Unsplash",
         checkoutShort: "Оформить", home: "Главная", catalog: "Каталог", close: "Закрыть", total: "Итого", continue: "Продолжить",
         nameLabel: "Как к тебе обращаться?", namePlaceholder: "Твоё имя",
         commentLabel: "Комментарий к заказу", commentPlaceholder: "Пожелания, удобное время связи — по желанию",
@@ -453,7 +453,7 @@
         catalogTitle: 'Choose<br><span class="accent">something sweet.</span>',
         catalogDescription: "Build a box of happiness: cookies for coffee, a croissant for breakfast, and something just for the mood.",
         searchPlaceholder: "Cookie, croissant, cake...", searchAria: "Search catalog",
-        all: "All", collection: "Collection", footerText: "CRUMB. · Telegram bot & Mini App demo · ", footerPhoto: "Unsplash photos",
+        all: "All", collection: "Collection", navAria: "Main navigation", categoriesAria: "Categories", footerText: "CRUMB. · Telegram bot & Mini App demo · ", footerPhoto: "Unsplash photos",
         checkoutShort: "Checkout", home: "Home", catalog: "Catalog", close: "Close", total: "Total", continue: "Continue",
         nameLabel: "What should we call you?", namePlaceholder: "Your name",
         commentLabel: "Order note", commentPlaceholder: "Wishes, a good time to call — optional",
@@ -498,7 +498,7 @@
     function t(key, vars = {}) {
       const table = I18N[lang] || I18N.ru;
       let value = table[key] || I18N.ru[key] || key;
-      for (const [name, replacement] of Object.entries(vars)) value = value.replaceAll(`{${name}}`, replacement);
+      for (const [name, replacement] of Object.entries(vars)) value = value.split(`{${name}}`).join(String(replacement));
       return value;
     }
     function localizedItem(item) {
