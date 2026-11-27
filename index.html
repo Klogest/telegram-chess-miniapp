@@ -3,1545 +3,720 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#101722">
-  <title>Тихий ход — шахматы</title>
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#f7f8f3">
+  <title>CRUMB — демо Telegram-бота пекарни</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://images.unsplash.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
-      color-scheme: dark;
-      --bg: #101722;
-      --panel: #182331;
-      --panel-2: #202d3d;
-      --ink: #f3f5f2;
-      --muted: #9ba8b6;
-      --mint: #b9f1d4;
-      --mint-dark: #10281f;
-      --gold: #e8c989;
-      --line: rgba(255,255,255,.09);
-      --light-square: #e9e3d5;
-      --dark-square: #718b7d;
-      --danger: #ee8c83;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --bg: #f7f8f3;
+      --paper: #fff;
+      --ink: #191c15;
+      --muted: #777d70;
+      --lime: #ceff62;
+      --lime-strong: #bdf344;
+      --green: #729a20;
+      --soft: #edf0e7;
+      --line: #e4e8dc;
+      --ease: cubic-bezier(.16, 1, .3, 1);
+      --shadow: 0 20px 55px rgba(35, 46, 20, .09);
+      --tg-theme-bg-color: #f7f8f3;
+      --tg-theme-text-color: #191c15;
+      --tg-theme-button-color: #ceff62;
+      --tg-theme-button-text-color: #191c15;
+      --tg-theme-secondary-bg-color: #fff;
     }
-
     * { box-sizing: border-box; }
-
+    [hidden] { display: none !important; }
+    html { background: var(--bg); scroll-behavior: smooth; }
     body {
-      margin: 0;
-      min-height: 100vh;
-      color: var(--ink);
-      background:
-        radial-gradient(ellipse at 10% 0%, rgba(99, 145, 124, .2), transparent 36rem),
-        radial-gradient(ellipse at 100% 100%, rgba(175, 139, 80, .12), transparent 34rem),
-        var(--bg);
+      min-width: 300px; min-height: 100vh; margin: 0; overflow-x: hidden;
+      background: var(--bg); color: var(--ink);
+      font: 14px/1.5 "Manrope", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased; transition: background .5s var(--ease), color .4s var(--ease);
     }
-
-    button { font: inherit; }
-
-    .app {
-      width: min(100%, 480px);
-      min-height: 100vh;
-      margin: 0 auto;
-      padding: max(20px, env(safe-area-inset-top)) 18px max(24px, env(safe-area-inset-bottom));
+    body::before {
+      position: fixed; z-index: -1; inset: 0; background:
+        radial-gradient(circle at 100% 0%, rgba(206,255,98,.16), transparent 32%),
+        radial-gradient(circle at 0% 60%, rgba(206,255,98,.1), transparent 28%);
+      content: ""; pointer-events: none;
     }
-
-    .topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 30px;
+    button, input, textarea { font: inherit; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    button { color: inherit; }
+    button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible {
+      outline: 3px solid rgba(145,192,47,.45); outline-offset: 3px;
     }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 11px;
-      color: var(--ink);
-      font-size: 13px;
-      font-weight: 800;
-      letter-spacing: .14em;
-      text-transform: uppercase;
+    button { cursor: pointer; }
+    img { display: block; max-width: 100%; }
+    .icon { width: 20px; height: 20px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .shell { width: min(100%, 1100px); margin: 0 auto; padding: 0 22px; }
+    .topbar { position: relative; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 88px; }
+    .logo { display: inline-flex; align-items: center; gap: 9px; border: 0; padding: 0; background: transparent; font-size: 19px; font-weight: 800; letter-spacing: -.06em; }
+    .logo-mark { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 11px; background: var(--ink); color: var(--lime); transform: rotate(-5deg); transition: transform .45s var(--ease); }
+    .logo:hover .logo-mark { transform: rotate(12deg) scale(1.08); }
+    .logo-mark .icon { width: 19px; height: 19px; }
+    .top-actions { display: flex; align-items: center; gap: 9px; }
+    .design-toggle, .bag-button {
+      display: inline-flex; height: 42px; align-items: center; justify-content: center; border: 1px solid var(--line);
+      background: rgba(255,255,255,.78); backdrop-filter: blur(15px); transition: transform .3s var(--ease), border-color .25s, background .25s;
     }
-
-    .brand-mark {
-      display: grid;
-      width: 36px;
-      height: 36px;
-      place-items: center;
-      border: 1px solid rgba(185, 241, 212, .28);
-      border-radius: 12px;
-      color: var(--mint);
-      background: rgba(185, 241, 212, .08);
-      font-size: 20px;
-    }
-
-    .online-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      padding: 8px 10px;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      color: var(--muted);
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: .05em;
-      text-transform: uppercase;
-    }
-
-    .online-pill::before {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--mint);
-      box-shadow: 0 0 10px rgba(185, 241, 212, .8);
-      content: "";
-    }
-
-    .eyebrow {
-      margin: 0 0 10px;
-      color: var(--mint);
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: .18em;
-      text-transform: uppercase;
-    }
-
-    h1, h2, p { margin-top: 0; }
-
-    h1 {
-      max-width: 340px;
-      margin-bottom: 14px;
-      font-size: clamp(36px, 10vw, 52px);
-      line-height: .99;
-      letter-spacing: -.055em;
-    }
-
-    .intro {
-      max-width: 350px;
-      margin-bottom: 26px;
-      color: var(--muted);
-      font-size: 15px;
-      line-height: 1.55;
-    }
-
-    .feature-card {
-      position: relative;
-      overflow: hidden;
-      min-height: 182px;
-      margin-bottom: 16px;
-      padding: 21px;
-      border: 1px solid rgba(255,255,255,.12);
-      border-radius: 23px;
-      background:
-        radial-gradient(circle at 88% 38%, rgba(185,241,212,.17), transparent 7rem),
-        linear-gradient(135deg, #263849, #1b2937 62%, #23322f);
-    }
-
-    .feature-card::after {
-      position: absolute;
-      top: 12px;
-      right: 18px;
-      color: rgba(233, 227, 213, .14);
-      content: "♞";
-      font-family: Georgia, serif;
-      font-size: 130px;
-      line-height: 1;
-      transform: rotate(-10deg);
-      pointer-events: none;
-    }
-
-    .feature-card h2 {
-      position: relative;
-      z-index: 1;
-      max-width: 210px;
-      margin: 0 0 8px;
-      font-size: 24px;
-      letter-spacing: -.035em;
-    }
-
-    .feature-card p {
-      position: relative;
-      z-index: 1;
-      max-width: 210px;
-      margin-bottom: 0;
-      color: #bdc9ce;
-      font-size: 13px;
-      line-height: 1.5;
-    }
-
-    .feature-label {
-      display: inline-flex;
-      position: relative;
-      z-index: 1;
-      margin-bottom: 14px;
-      padding: 6px 9px;
-      border: 1px solid rgba(185, 241, 212, .2);
-      border-radius: 999px;
-      color: var(--mint);
-      background: rgba(10, 25, 23, .32);
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-    }
-
-    .primary-button, .secondary-button, .icon-button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 9px;
-      min-height: 50px;
-      border: 0;
-      border-radius: 15px;
-      cursor: pointer;
-      transition: transform .15s ease, filter .15s ease, background .15s ease;
-    }
-
-    .primary-button:active, .secondary-button:active, .icon-button:active { transform: scale(.98); }
-
+    .design-toggle { gap: 8px; border-radius: 99px; padding: 0 14px; font-size: 11px; font-weight: 800; }
+    .design-toggle .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 4px rgba(189,243,68,.25); }
+    .bag-button { position: relative; width: 42px; border-radius: 50%; }
+    .design-toggle:hover, .bag-button:hover { transform: translateY(-3px); border-color: #c4d69f; background: var(--paper); }
+    .design-toggle:active, .bag-button:active { transform: scale(.93); }
+    .bag-count { position: absolute; top: -4px; right: -3px; display: grid; min-width: 18px; height: 18px; place-items: center; border: 2px solid var(--bg); border-radius: 99px; padding: 0 4px; background: var(--lime); font-size: 9px; font-weight: 800; }
+    #app { view-transition-name: app; }
+    .view { padding-bottom: 140px; }
+    .hero { display: grid; grid-template-columns: 1.05fr .95fr; align-items: center; gap: 45px; min-height: 530px; padding: 30px 0 48px; }
+    .hero-copy { position: relative; z-index: 2; }
+    .eyebrow { display: flex; align-items: center; gap: 9px; margin: 0 0 20px; color: #68735b; font-size: 10px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
+    .eyebrow::before { width: 21px; height: 2px; background: var(--green); content: ""; }
+    h1, h2, h3, p { margin-top: 0; }
+    .hero h1, .catalog-heading h1 { margin-bottom: 22px; font-size: clamp(52px, 7vw, 82px); font-weight: 700; letter-spacing: -.075em; line-height: .96; }
+    .hero h1 .accent, .catalog-heading h1 .accent { position: relative; display: inline-block; z-index: 0; color: var(--green); font-weight: 500; font-style: italic; }
+    .hero h1 .accent::after { position: absolute; z-index: -1; right: -9px; bottom: -1px; left: -7px; height: 16px; border-radius: 50%; background: var(--lime); content: ""; transform: rotate(-2deg); opacity: .7; }
+    .hero-description { max-width: 390px; margin-bottom: 27px; color: var(--muted); font-size: 14px; line-height: 1.7; }
     .primary-button {
-      position: relative;
-      z-index: 1;
-      margin-top: 16px;
-      padding: 0 17px;
-      color: #14231d;
-      background: var(--mint);
-      font-size: 14px;
-      font-weight: 800;
+      display: inline-flex; min-height: 52px; align-items: center; justify-content: center; gap: 18px; border: 0; border-radius: 17px;
+      padding: 0 20px; background: var(--ink); color: #fff; font-size: 12px; font-weight: 700;
+      box-shadow: 0 9px 22px rgba(25,28,21,.14); transition: transform .3s var(--ease), box-shadow .3s, background .25s;
     }
-
-    .primary-button:hover { filter: brightness(1.06); }
-
-    .secondary-button {
-      padding: 0 14px;
-      border: 1px solid var(--line);
-      color: var(--ink);
-      background: var(--panel-2);
-      font-size: 13px;
-      font-weight: 750;
+    .primary-button .button-icon { display: grid; width: 28px; height: 28px; place-items: center; border-radius: 50%; background: var(--lime); color: var(--ink); transition: transform .35s var(--ease); }
+    .primary-button:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(25,28,21,.2); }
+    .primary-button:hover .button-icon { transform: rotate(45deg); }
+    .primary-button:active { transform: scale(.97); }
+    .hero-note { display: inline-flex; align-items: center; gap: 7px; margin-left: 15px; color: var(--muted); font-size: 10px; }
+    .hero-note .icon { width: 15px; height: 15px; color: var(--green); }
+    .hero-visual { position: relative; min-height: 430px; perspective: 900px; }
+    .lime-field { position: absolute; inset: 9% 1% 3% 6%; border-radius: 46% 46% 25% 25% / 34% 34% 16% 16%; background: var(--lime); transform: rotate(4deg); }
+    .hero-photo-wrap { position: absolute; inset: 0 9% 4% 0; overflow: hidden; border: 7px solid rgba(255,255,255,.7); border-radius: 48% 48% 23% 23% / 33% 33% 16% 16%; background: #e4e8da; box-shadow: var(--shadow); transform: translate(var(--px, 0), var(--py, 0)) rotate(-3deg); transition: transform .7s var(--ease); }
+    .hero-photo { width: 100%; height: 100%; object-fit: cover; object-position: center 48%; opacity: 0; transform: scale(1.06); transition: opacity .8s var(--ease), transform 1.2s var(--ease); }
+    .hero-photo.is-loaded { opacity: 1; transform: scale(1); }
+    .hero-sticker { position: absolute; z-index: 3; top: 5%; right: -3%; display: grid; width: 95px; height: 95px; place-items: center; border-radius: 50%; background: var(--ink); color: var(--lime); animation: float 5s ease-in-out infinite; }
+    .hero-sticker .icon { width: 47px; height: 47px; stroke-width: 1.1; animation: slow-spin 20s linear infinite; }
+    .hero-label { position: absolute; z-index: 3; right: 0; bottom: 6%; width: 160px; border: 1px solid rgba(255,255,255,.7); border-radius: 18px; padding: 14px 16px; background: rgba(255,255,255,.87); box-shadow: 0 14px 35px rgba(38,45,25,.12); backdrop-filter: blur(15px); transform: rotate(3deg); }
+    .hero-label small { display: block; margin-bottom: 4px; color: var(--green); font-size: 8px; font-weight: 800; letter-spacing: .15em; }
+    .hero-label strong { display: block; font-size: 12px; line-height: 1.4; }
+    .hero-label .mini-line { width: 28px; height: 3px; margin-top: 10px; border-radius: 9px; background: var(--lime-strong); }
+    .hero-copy > * { animation: reveal-up .8s var(--ease) both; }
+    .hero-copy > *:nth-child(2) { animation-delay: .08s; }
+    .hero-copy > *:nth-child(3) { animation-delay: .16s; }
+    .hero-copy > *:nth-child(4) { animation-delay: .24s; }
+    .hero-visual { animation: reveal-visual 1s .12s var(--ease) both; }
+    .ticker { overflow: hidden; margin: 0 -22px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 13px 0; background: rgba(255,255,255,.45); }
+    .ticker-track { display: flex; width: max-content; align-items: center; gap: 28px; animation: ticker 25s linear infinite; }
+    .ticker-track span { display: flex; align-items: center; gap: 28px; color: #657157; font-size: 10px; font-weight: 800; letter-spacing: .18em; white-space: nowrap; }
+    .ticker-star { width: 10px; height: 10px; background: var(--green); clip-path: polygon(50% 0,61% 37%,100% 50%,61% 63%,50% 100%,39% 63%,0 50%,39% 37%); }
+    .benefits { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 44px 0 20px; }
+    .benefit { display: flex; align-items: center; gap: 13px; border-radius: 18px; padding: 15px; background: rgba(255,255,255,.55); }
+    .benefit-icon { display: grid; width: 40px; height: 40px; flex: 0 0 auto; place-items: center; border-radius: 14px; background: var(--soft); color: var(--green); }
+    .benefit strong { display: block; margin-bottom: 2px; font-size: 11px; }
+    .benefit small { display: block; color: var(--muted); font-size: 9px; }
+    .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin: 46px 0 20px; }
+    .section-heading h2 { margin: 0; font-size: 27px; letter-spacing: -.055em; }
+    .text-button { display: inline-flex; align-items: center; gap: 7px; border: 0; padding: 5px 0; background: transparent; color: var(--muted); font-size: 11px; font-weight: 700; }
+    .text-button .icon { width: 16px; transition: transform .25s var(--ease); }
+    .text-button:hover { color: var(--ink); }
+    .text-button:hover .icon { transform: translate(3px,-3px); }
+    .catalog-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; padding: 38px 0 24px; }
+    .catalog-heading h1 { margin: 0; font-size: clamp(49px,7vw,76px); }
+    .catalog-heading p { max-width: 250px; margin: 0 0 9px; color: var(--muted); font-size: 12px; }
+    .catalog-tools { position: sticky; z-index: 10; top: 8px; border: 1px solid rgba(228,232,220,.8); border-radius: 21px; padding: 10px; background: rgba(247,248,243,.83); box-shadow: 0 8px 30px rgba(36,45,24,.04); backdrop-filter: blur(20px); }
+    .search-box { position: relative; margin-bottom: 9px; }
+    .search-box .icon { position: absolute; top: 13px; left: 14px; width: 17px; color: var(--muted); pointer-events: none; }
+    .search-box input { width: 100%; height: 43px; border: 0; border-radius: 13px; padding: 0 15px 0 42px; outline: 0; background: var(--paper); color: var(--ink); font-size: 12px; transition: box-shadow .25s; }
+    .search-box input:focus { box-shadow: 0 0 0 3px rgba(189,243,68,.35); }
+    .search-box input::placeholder { color: #989e91; }
+    .categories { display: flex; gap: 7px; overflow-x: auto; padding: 1px; scrollbar-width: none; }
+    .categories::-webkit-scrollbar { display: none; }
+    .category { flex: 0 0 auto; border: 0; border-radius: 99px; padding: 9px 15px; background: transparent; color: var(--muted); font-size: 10px; font-weight: 700; transition: color .25s, background .3s var(--ease), transform .25s var(--ease); }
+    .category:hover { color: var(--ink); transform: translateY(-2px); }
+    .category.active { background: var(--ink); color: var(--lime); }
+    .catalog-meta { display: flex; align-items: center; justify-content: space-between; margin: 25px 2px 14px; color: var(--muted); font-size: 10px; }
+    .catalog-meta strong { color: var(--ink); font-size: 14px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 17px; }
+    .product-card { position: relative; min-width: 0; overflow: hidden; border: 1px solid rgba(228,232,220,.9); border-radius: 24px; padding: 9px 9px 14px; background: var(--paper); box-shadow: 0 4px 20px rgba(39,49,26,.035); transition: transform .5s var(--ease), box-shadow .5s var(--ease), border-color .3s; }
+    .product-card:hover { border-color: #d2ddbb; box-shadow: 0 22px 45px rgba(39,49,26,.1); transform: translateY(-7px); }
+    .product-media { position: relative; overflow: hidden; aspect-ratio: 1 / 1.06; border-radius: 18px; background: linear-gradient(120deg,#eef0e9 30%,#f7f8f4 50%,#eef0e9 70%); background-size: 250% 100%; }
+    .product-media::after { position: absolute; inset: 0; background: linear-gradient(to top,rgba(21,26,15,.12),transparent 28%); content: ""; pointer-events: none; }
+    .product-image { width: 100%; height: 100%; object-fit: cover; opacity: 0; transform: scale(1.025); transition: opacity .65s var(--ease), transform .8s var(--ease); }
+    .product-image.is-loaded { opacity: 1; }
+    .product-card:hover .product-image { transform: scale(1.075); }
+    .product-tag { position: absolute; z-index: 2; top: 10px; left: 10px; border-radius: 99px; padding: 6px 9px; background: rgba(255,255,255,.86); color: #55603f; font-size: 7px; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; backdrop-filter: blur(8px); }
+    .product-body { padding: 13px 5px 0; }
+    .product-category { margin-bottom: 5px; color: #899078; font-size: 8px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    .product-body h3 { min-height: 38px; margin: 0 0 5px; font-size: 14px; font-weight: 700; letter-spacing: -.035em; line-height: 1.35; }
+    .product-desc { min-height: 32px; margin-bottom: 13px; color: var(--muted); font-size: 9px; line-height: 1.6; }
+    .product-bottom { display: flex; min-height: 37px; align-items: center; justify-content: space-between; gap: 7px; }
+    .price { white-space: nowrap; font-size: 13px; font-weight: 800; letter-spacing: -.03em; }
+    .add-button { display: grid; width: 36px; height: 36px; flex: 0 0 auto; place-items: center; border: 0; border-radius: 13px; background: var(--lime); color: var(--ink); font-size: 22px; line-height: 1; box-shadow: 0 6px 14px rgba(173,213,72,.2); transition: transform .3s var(--ease), background .25s; }
+    .add-button:hover { background: var(--lime-strong); transform: rotate(90deg) scale(1.08); }
+    .add-button:active, .qty-button:active { transform: scale(.85); }
+    .quantity-control { display: flex; align-items: center; gap: 5px; border-radius: 13px; padding: 3px; background: var(--soft); }
+    .qty-button { display: grid; width: 29px; height: 29px; place-items: center; border: 0; border-radius: 10px; background: var(--paper); font-size: 17px; line-height: 1; transition: transform .2s var(--ease), background .2s; }
+    .qty-button:last-child { background: var(--lime); }
+    .qty-label { min-width: 18px; text-align: center; font-size: 11px; font-weight: 800; }
+    .empty { grid-column: 1/-1; border: 1px dashed #d4dbc8; border-radius: 24px; padding: 55px 20px; color: var(--muted); text-align: center; }
+    .empty strong { display: block; margin-bottom: 7px; color: var(--ink); font-size: 17px; }
+    .bottom-nav { position: fixed; z-index: 25; bottom: calc(17px + env(safe-area-inset-bottom)); left: 50%; display: flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,.85); border-radius: 22px; padding: 6px; background: rgba(25,28,21,.94); box-shadow: 0 15px 45px rgba(24,31,15,.23); backdrop-filter: blur(20px); transform: translateX(-50%); transition: transform .5s var(--ease), opacity .3s; }
+    .nav-button { display: flex; min-width: 105px; height: 43px; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 16px; padding: 0 15px; background: transparent; color: #aeb4a7; font-size: 10px; font-weight: 700; transition: background .3s, color .3s, transform .25s var(--ease); }
+    .nav-button .icon { width: 17px; }
+    .nav-button.active { background: var(--lime); color: var(--ink); }
+    .nav-button:active { transform: scale(.94); }
+    .cart-dock { position: fixed; z-index: 24; right: max(18px,calc((100vw - 1020px)/2)); bottom: calc(20px + env(safe-area-inset-bottom)); left: max(18px,calc((100vw - 1020px)/2)); display: flex; align-items: center; justify-content: space-between; gap: 16px; border: 1px solid rgba(255,255,255,.12); border-radius: 23px; padding: 11px 12px 11px 20px; background: rgba(25,28,21,.97); color: white; box-shadow: 0 18px 45px rgba(24,31,15,.24); opacity: 0; pointer-events: none; transform: translateY(35px) scale(.97); transition: opacity .35s, transform .55s var(--ease); }
+    .cart-dock.visible { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
+    .cart-dock.visible ~ .bottom-nav, body.has-cart .bottom-nav { opacity: 0; pointer-events: none; transform: translate(-50%,130%); }
+    .dock-copy small { display: block; color: #b9c0b1; font-size: 9px; }
+    .dock-copy strong { font-size: 17px; }
+    .dock-checkout { display: inline-flex; align-items: center; gap: 14px; border: 0; border-radius: 16px; padding: 13px 17px; background: var(--lime); font-size: 11px; font-weight: 800; transition: transform .25s var(--ease); }
+    .dock-checkout:hover { transform: scale(1.035); }
+    .dock-checkout .icon { width: 17px; }
+    body.telegram .cart-dock { display: none; }
+    body.telegram.main-active .bottom-nav { opacity: 0; pointer-events: none; transform: translate(-50%,130%); }
+    dialog { width: min(100% - 24px,520px); max-height: min(88vh,760px); margin: auto auto 12px; overflow: auto; border: 1px solid rgba(255,255,255,.8); border-radius: 30px; padding: 0; background: var(--paper); color: var(--ink); box-shadow: 0 30px 100px rgba(19,26,12,.25); }
+    dialog[open] { animation: sheet-in .55s var(--ease) both; }
+    dialog::backdrop { background: rgba(20,26,14,.4); backdrop-filter: blur(9px); animation: fade-in .3s ease both; }
+    .sheet-handle { width: 38px; height: 4px; margin: 10px auto 4px; border-radius: 99px; background: #dfe4d7; }
+    .sheet-content { padding: 16px 24px 24px; }
+    .sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+    .sheet-kicker { margin: 0 0 3px; color: var(--green); font-size: 8px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
+    .sheet-head h2 { margin: 0; font-size: 27px; letter-spacing: -.055em; }
+    .close-button { display: grid; width: 38px; height: 38px; place-items: center; border: 0; border-radius: 50%; background: var(--soft); transition: transform .3s var(--ease); }
+    .close-button:hover { transform: rotate(90deg); }
+    .close-button .icon { width: 17px; }
+    .stepper { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin: 19px 0; }
+    .stepper span { height: 3px; border-radius: 9px; background: var(--soft); transition: background .4s; }
+    .stepper span.active { background: var(--lime-strong); }
+    .cart-lines { display: grid; gap: 11px; margin-bottom: 18px; }
+    .cart-line { display: grid; grid-template-columns: 58px 1fr auto; align-items: center; gap: 11px; border-radius: 17px; padding: 8px; background: #f7f8f4; }
+    .cart-line img { width: 58px; height: 58px; border-radius: 12px; object-fit: cover; background: var(--soft); }
+    .cart-line h3 { margin: 0 0 3px; font-size: 11px; }
+    .cart-line p { margin: 0; color: var(--muted); font-size: 10px; }
+    .cart-line .quantity-control { transform: scale(.88); transform-origin: right center; }
+    .order-total { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); padding: 17px 2px; }
+    .order-total span { color: var(--muted); font-size: 11px; }
+    .order-total strong { font-size: 21px; letter-spacing: -.04em; }
+    .sheet-primary { width: 100%; border-radius: 16px; }
+    .sheet-primary:disabled { opacity: .5; cursor: not-allowed; }
+    .sheet-secondary { display: block; margin: 11px auto 0; border: 0; padding: 8px 15px; background: transparent; color: var(--muted); font-size: 10px; }
+    .form-field { display: block; margin-bottom: 14px; }
+    .form-field span { display: block; margin: 0 0 7px 3px; color: #5c6553; font-size: 10px; font-weight: 700; }
+    .form-field input, .form-field textarea { width: 100%; border: 1px solid var(--line); border-radius: 15px; padding: 13px 14px; outline: 0; background: #f8f9f5; color: var(--ink); transition: border-color .25s, box-shadow .25s, background .25s; }
+    .form-field input:focus, .form-field textarea:focus { border-color: #b2d766; background: var(--paper); box-shadow: 0 0 0 4px rgba(206,255,98,.25); }
+    .form-field textarea { min-height: 90px; resize: vertical; }
+    .checkout-note { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 12px 0 0; color: var(--muted); font-size: 9px; }
+    .checkout-note .icon { width: 13px; }
+    .toast { position: fixed; z-index: 100; top: calc(17px + env(safe-area-inset-top)); left: 50%; max-width: calc(100vw - 30px); border: 1px solid rgba(255,255,255,.15); border-radius: 99px; padding: 11px 17px; background: rgba(25,28,21,.96); color: white; box-shadow: 0 12px 35px rgba(25,28,21,.18); font-size: 10px; font-weight: 700; text-align: center; opacity: 0; pointer-events: none; transform: translate(-50%,-20px) scale(.95); transition: opacity .25s, transform .45s var(--ease); }
+    .toast.show { opacity: 1; transform: translate(-50%,0) scale(1); }
+    .footer { padding: 42px 0 10px; color: #93998c; font-size: 9px; text-align: center; }
+    .footer a { color: inherit; }
+    body[data-design="pulse"] { --bg: #f3f7e9; --lime: #c6ff45; --green: #638d12; }
+    body[data-design="pulse"] .lime-field { inset: 3% -4% 0 1%; border-radius: 35px; transform: rotate(-4deg); }
+    body[data-design="pulse"] .hero-photo-wrap { inset: 5% 4% 6% 5%; border-radius: 35px; transform: translate(var(--px,0),var(--py,0)) rotate(3deg); }
+    body[data-design="pulse"] .hero-sticker { background: var(--lime); color: var(--ink); }
+    body[data-design="pulse"] .product-card { border-color: #dce6c8; border-radius: 18px 32px 18px 32px; }
+    body[data-design="pulse"] .product-media { border-radius: 12px 25px 12px 25px; }
+    body[data-design="pulse"] .category.active { background: var(--lime); color: var(--ink); }
+    ::view-transition-group(app) { animation-duration: .5s; animation-timing-function: var(--ease); }
+    ::view-transition-old(app) { animation: page-old .35s var(--ease) both; }
+    ::view-transition-new(app) { animation: page-new .5s var(--ease) both; }
+    @keyframes reveal-up { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes reveal-visual { from { opacity: 0; transform: translateY(20px) scale(.95) rotate(2deg); } to { opacity: 1; transform: translateY(0) scale(1) rotate(0); } }
+    @keyframes float { 0%,100% { transform: translateY(0) rotate(8deg); } 50% { transform: translateY(-12px) rotate(-2deg); } }
+    @keyframes slow-spin { to { transform: rotate(360deg); } }
+    @keyframes ticker { to { transform: translateX(-50%); } }
+    @keyframes sheet-in { from { opacity: 0; transform: translateY(45px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes page-old { to { opacity: 0; transform: translateX(-20px) scale(.985); filter: blur(3px); } }
+    @keyframes page-new { from { opacity: 0; transform: translateX(24px) scale(.985); filter: blur(3px); } to { opacity: 1; transform: translateX(0) scale(1); filter: blur(0); } }
+    @media (min-width: 800px) {
+      .shell { padding: 0 35px; }
+      .ticker { margin: 0 -35px; }
+      .grid { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 20px; }
+      #featured-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+      .featured-grid .product-media { aspect-ratio: 1.4/1; }
+      .featured-grid .product-body h3, .featured-grid .product-desc { min-height: 0; }
+      dialog { margin: auto; }
     }
-
-    .menu-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 20px;
+    @media (max-width: 650px) {
+      .shell { padding: 0 17px; }
+      .topbar { height: 75px; }
+      .hero { grid-template-columns: 1fr; gap: 24px; min-height: 0; padding: 23px 0 32px; }
+      .hero h1 { font-size: clamp(51px,15vw,72px); }
+      .hero-description { max-width: 330px; }
+      .hero-visual { min-height: 370px; margin: 0 3px; }
+      .hero-photo-wrap { right: 7%; }
+      .hero-sticker { right: 0; width: 78px; height: 78px; }
+      .hero-sticker .icon { width: 39px; height: 39px; }
+      .hero-label { right: 1%; bottom: 4%; }
+      .ticker { margin: 0 -17px; }
+      .benefits { grid-template-columns: 1fr; gap: 7px; padding-top: 25px; }
+      .benefit { padding: 11px 13px; }
+      .catalog-heading { display: block; padding-top: 25px; }
+      .catalog-heading h1 { font-size: 55px; }
+      .catalog-heading p { margin-top: 15px; }
+      .catalog-tools { top: 6px; }
+      .grid { gap: 11px; }
+      .product-card { border-radius: 20px; padding: 7px 7px 12px; }
+      .product-media { border-radius: 15px; }
+      .product-body { padding: 11px 4px 0; }
+      .product-body h3 { font-size: 12px; }
+      .product-desc { font-size: 8px; }
+      .price { font-size: 12px; }
+      .quantity-control { gap: 2px; }
+      .qty-button { width: 26px; height: 28px; }
+      .qty-label { min-width: 14px; }
+      .nav-button { min-width: 101px; }
+      .cart-dock { bottom: calc(15px + env(safe-area-inset-bottom)); }
+      dialog { width: 100%; max-width: none; max-height: 91vh; margin: auto 0 0; border-radius: 28px 28px 0 0; border-bottom: 0; }
     }
-
-    .menu-tile {
-      min-height: 103px;
-      padding: 15px;
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      background: rgba(24, 35, 49, .88);
+    @media (max-width: 350px) {
+      .design-toggle { padding: 0 10px; }
+      .design-toggle .status-dot { display: none; }
+      .hero-note { display: flex; margin: 13px 0 0; }
+      .product-bottom { align-items: flex-end; flex-direction: column; }
+      .product-bottom .price { align-self: flex-start; }
     }
-
-    .tile-icon {
-      display: block;
-      margin-bottom: 11px;
-      color: var(--gold);
-      font-size: 20px;
-    }
-
-    .menu-tile strong { display: block; font-size: 13px; }
-    .menu-tile small { color: var(--muted); font-size: 11px; }
-
-    .footnote {
-      margin: 17px 2px 0;
-      color: #738191;
-      font-size: 11px;
-      line-height: 1.5;
-    }
-
-    .game-view { display: none; }
-    .game-view.active { display: block; }
-    .menu-view.hidden { display: none; }
-    .players-view { display: none; }
-    .players-view.active { display: block; }
-
-    .online-card, .section-card {
-      margin-top: 13px;
-      padding: 15px;
-      border: 1px solid var(--line);
-      border-radius: 17px;
-      background: rgba(24, 35, 49, .9);
-    }
-
-    .online-card {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      align-items: center;
-      gap: 11px;
-    }
-
-    .online-card strong, .online-card small { display: block; }
-    .online-card strong { margin-bottom: 4px; font-size: 14px; }
-    .online-card small { color: var(--muted); font-size: 11px; line-height: 1.4; }
-
-    .rating-chip {
-      padding: 8px 10px;
-      border: 1px solid rgba(232,201,137,.18);
-      border-radius: 12px;
-      color: var(--gold);
-      background: rgba(232,201,137,.08);
-      font-size: 12px;
-      font-weight: 850;
-      white-space: nowrap;
-    }
-
-    .online-card .secondary-button {
-      grid-column: 1 / -1;
-      width: 100%;
-    }
-
-    .inline-form {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 8px;
-      margin-top: 12px;
-    }
-
-    .text-input {
-      width: 100%;
-      min-width: 0;
-      min-height: 44px;
-      padding: 0 12px;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      outline: none;
-      color: var(--ink);
-      background: #111b27;
-      font: inherit;
-      font-size: 13px;
-    }
-
-    .text-input:focus { border-color: rgba(185,241,212,.6); }
-    .inline-form .secondary-button { min-height: 44px; }
-
-    .section-heading {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      margin: 0 0 11px;
-      font-size: 13px;
-    }
-
-    .section-heading span {
-      color: var(--muted);
-      font-size: 10px;
-      font-weight: 700;
-    }
-
-    .player-list { display: grid; gap: 8px; }
-
-    .player-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      padding: 10px 11px;
-      border: 1px solid rgba(255,255,255,.06);
-      border-radius: 12px;
-      background: rgba(255,255,255,.025);
-    }
-
-    .player-info { min-width: 0; }
-    .player-info strong { display: block; overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
-    .player-info small { color: var(--muted); font-size: 10px; }
-    .player-row .secondary-button { min-height: 34px; padding: 0 10px; border-radius: 10px; font-size: 11px; }
-    .empty-state { color: var(--muted); font-size: 11px; line-height: 1.5; }
-    .online-error { min-height: 15px; margin: 9px 0 0; color: var(--danger); font-size: 11px; }
-    .online-success { color: var(--mint); }
-    .invite-code { overflow-wrap: anywhere; color: var(--mint); font-size: 11px; }
-
-    .game-heading {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 17px;
-    }
-
-    .game-heading h1 {
-      margin: 0;
-      font-size: 29px;
-      letter-spacing: -.04em;
-    }
-
-    .icon-button {
-      flex: 0 0 44px;
-      width: 44px;
-      min-height: 44px;
-      border: 1px solid var(--line);
-      color: var(--ink);
-      background: var(--panel);
-      font-size: 17px;
-    }
-
-    .status-card {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 13px;
-      padding: 13px 15px;
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      background: rgba(24, 35, 49, .9);
-    }
-
-    .status-main { min-width: 0; }
-    .status-main strong { display: block; margin-bottom: 3px; font-size: 13px; }
-    .status-main span { color: var(--muted); font-size: 11px; }
-
-    .turn-badge {
-      flex: 0 0 auto;
-      padding: 7px 10px;
-      border-radius: 999px;
-      color: var(--mint);
-      background: rgba(185, 241, 212, .1);
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-    }
-
-    .turn-badge.black {
-      color: #f0d195;
-      background: rgba(232, 201, 137, .11);
-    }
-
-    .board-wrap {
-      padding: 9px;
-      border: 1px solid rgba(255,255,255,.12);
-      border-radius: 19px;
-      background: #273442;
-      box-shadow: 0 18px 50px rgba(0,0,0,.22);
-    }
-
-    .board {
-      display: grid;
-      grid-template-columns: repeat(8, minmax(0, 1fr));
-      grid-template-rows: repeat(8, minmax(0, 1fr));
-      overflow: hidden;
-      border-radius: 11px;
-      width: 100%;
-      aspect-ratio: 1;
-    }
-
-    .square {
-      position: relative;
-      display: grid;
-      min-width: 0;
-      min-height: 0;
-      width: 100%;
-      aspect-ratio: 1;
-      place-items: center;
-      padding: 0;
-      border: 0;
-      overflow: hidden;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .square.light { background: var(--light-square); }
-    .square.dark { background: var(--dark-square); }
-    .square.selected { box-shadow: inset 0 0 0 4px var(--gold); }
-    .square.last-move { box-shadow: inset 0 0 0 999px rgba(232, 201, 137, .27); }
-    .square.selected.last-move { box-shadow: inset 0 0 0 4px var(--gold), inset 0 0 0 999px rgba(232, 201, 137, .2); }
-
-    .piece-svg {
-      position: relative;
-      z-index: 1;
-      display: block;
-      width: 82%;
-      height: 82%;
-      filter: drop-shadow(0 2px 1px rgba(0,0,0,.16));
-      user-select: none;
-      pointer-events: none;
-    }
-
-    .piece-svg.white path, .piece-svg.white circle {
-      fill: #fffdf5;
-      stroke: #526b61;
-      stroke-width: 1.7;
-      stroke-linejoin: round;
-      stroke-linecap: round;
-    }
-
-    .piece-svg.black path, .piece-svg.black circle {
-      fill: #273640;
-      stroke: #d7dfd4;
-      stroke-width: 1.35;
-      stroke-linejoin: round;
-      stroke-linecap: round;
-    }
-
-    .piece-svg .detail {
-      fill: none !important;
-      stroke-width: 2.1 !important;
-    }
-
-    .coordinate {
-      position: absolute;
-      z-index: 2;
-      color: rgba(28, 43, 45, .72);
-      font-size: 8px;
-      font-weight: 800;
-      line-height: 1;
-      pointer-events: none;
-    }
-
-    .square.dark .coordinate { color: rgba(255,255,255,.75); }
-    .coordinate.rank { top: 4px; left: 4px; }
-    .coordinate.file { right: 4px; bottom: 3px; }
-
-    .move-dot {
-      position: absolute;
-      width: 24%;
-      height: 24%;
-      border-radius: 50%;
-      background: rgba(25, 43, 36, .32);
-      pointer-events: none;
-    }
-
-    .square.has-piece .move-dot { width: 84%; height: 84%; border: 4px solid rgba(219, 95, 79, .75); background: transparent; }
-    .square.in-check { background: #bf6259 !important; }
-
-    .game-actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 13px;
-    }
-
-    .history-card {
-      margin-top: 13px;
-      padding: 13px 15px;
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      background: rgba(24, 35, 49, .8);
-    }
-
-    .history-title {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 8px;
-      color: var(--muted);
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-    }
-
-    .history-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px 13px;
-      max-height: 55px;
-      overflow: auto;
-      color: #d8e0df;
-      font-size: 11px;
-    }
-
-    .history-empty { color: #788696; }
-
-    dialog {
-      width: min(310px, calc(100% - 36px));
-      padding: 20px;
-      border: 1px solid var(--line);
-      border-radius: 20px;
-      color: var(--ink);
-      background: #1b2835;
-      box-shadow: 0 24px 70px rgba(0,0,0,.45);
-    }
-
-    dialog::backdrop { background: rgba(4, 8, 14, .7); backdrop-filter: blur(5px); }
-    dialog h2 { margin-bottom: 15px; font-size: 18px; }
-    .promotion-options { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-    .promotion-options button {
-      min-height: 56px;
-      border: 1px solid var(--line);
-      border-radius: 13px;
-      color: var(--ink);
-      background: var(--panel-2);
-      font-size: 28px;
-      cursor: pointer;
-    }
-
-    @media (max-width: 360px) {
-      .app { padding-right: 13px; padding-left: 13px; }
-      .board-wrap { padding: 6px; }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *,*::before,*::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+      ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*) { animation: none !important; }
     }
   </style>
 </head>
-<body>
-  <main class="app">
-    <header class="topbar">
-      <div class="brand"><span class="brand-mark">♞</span><span>Тихий ход</span></div>
-      <span class="online-pill">мини-игра</span>
-    </header>
+<body data-design="air">
+  <!-- SVG-иконки в стиле Lucide (ISC). Фотографии: Unsplash, https://unsplash.com/license -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 2c0 6.5-3.5 10-10 10 6.5 0 10 3.5 10 10 0-6.5 3.5-10 10-10-6.5 0-10-3.5-10-10Z"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M7 17 17 7M7 7h10v10"/></symbol>
+    <symbol id="i-bag" viewBox="0 0 24 24"><path d="M6 8h12l1 13H5L6 8Z"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10M9 20v-6h6v6"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></symbol>
+    <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M20 3C12 3 5 6 5 14c0 4 3 7 7 7 8 0 8-9 8-18Z"/><path d="M3 21c3-6 7-10 13-13"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/></symbol>
+    <symbol id="i-box" viewBox="0 0 24 24"><path d="m21 8-9-5-9 5 9 5 9-5Z"/><path d="m3 8 9 5 9-5M3 8v9l9 5 9-5V8M12 13v9"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+  </svg>
 
-    <section class="menu-view" id="menuView">
-      <p class="eyebrow">Твоя маленькая пауза</p>
-      <h1>Сделай<br>свой ход.</h1>
-      <p class="intro">Спокойная партия в шахматы — без рейтингов, таймеров и лишнего шума.</p>
+  <header class="topbar shell">
+    <button class="logo" id="logo-button" type="button" aria-label="CRUMB — на главную">
+      <span class="logo-mark"><svg class="icon"><use href="#i-spark"/></svg></span><span>CRUMB.</span>
+    </button>
+    <div class="top-actions">
+      <button class="design-toggle" id="design-toggle" type="button" aria-label="Переключить дизайн"><span class="status-dot"></span><span id="design-name">Air</span></button>
+      <button class="bag-button" id="bag-button" type="button" aria-label="Открыть корзину"><svg class="icon"><use href="#i-bag"/></svg><span class="bag-count" id="bag-count" hidden>0</span></button>
+    </div>
+  </header>
 
-      <article class="feature-card">
-        <span class="feature-label">Классика · 2 игрока</span>
-        <h2>Шахматы</h2>
-        <p>Один экран, две стороны и сколько угодно времени на ход.</p>
-        <button class="primary-button" id="startGame">Начать партию <span aria-hidden="true">↗</span></button>
-      </article>
-
-      <div class="menu-grid">
-        <div class="menu-tile">
-          <span class="tile-icon">♙</span>
-          <strong>Обычные правила</strong>
-          <small>Мат, пат и превращение пешки</small>
+  <main id="app" class="shell">
+    <section class="view" id="home-view" aria-label="Главная">
+      <div class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Демо · Telegram-бот + Mini App</p>
+          <h1>Счастье<br>в каждой<br><span class="accent">крошке.</span></h1>
+          <p class="hero-description">Печём печенье и круассаны небольшими партиями. Выбирай любимое — заказ улетит прямо в Telegram-бота.</p>
+          <div>
+            <button class="primary-button" id="hero-catalog" type="button">Выбрать своё <span class="button-icon"><svg class="icon"><use href="#i-arrow"/></svg></span></button>
+            <span class="hero-note"><svg class="icon"><use href="#i-heart"/></svg>Тёплое, как надо</span>
+          </div>
         </div>
-        <div class="menu-tile">
-          <span class="tile-icon">◷</span>
-          <strong>Без спешки</strong>
-          <small>Ходи в своём темпе</small>
+        <div class="hero-visual" id="hero-visual">
+          <div class="lime-field"></div>
+          <div class="hero-photo-wrap"><img class="hero-photo" id="hero-photo" src="https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=1000&q=88&auto=format&fit=crop" alt="Свежее печенье с кусочками шоколада" fetchpriority="high"></div>
+          <div class="hero-sticker" aria-hidden="true"><svg class="icon"><use href="#i-spark"/></svg></div>
+          <div class="hero-label"><small>FRESH FROM THE OVEN</small><strong>Тёплое. Хрустящее.<br>Твоё.</strong><div class="mini-line"></div></div>
         </div>
       </div>
-      <section class="online-card">
-        <div>
-          <strong id="menuPlayerName">Шахматный клуб</strong>
-          <small id="menuPlayerHint">Профиль, друзья и онлайн-партии</small>
-        </div>
-        <span class="rating-chip" id="menuPlayerElo">1000 ELO</span>
-        <button class="secondary-button" id="openPlayers">Игроки и друзья <span aria-hidden="true">→</span></button>
-      </section>
-      <p class="footnote">Локальная игра для двух игроков на одном устройстве. Нажми на фигуру, затем на клетку для хода.</p>
+      <div class="ticker" aria-hidden="true"><div class="ticker-track">
+        <span>FRESH <i class="ticker-star"></i> WARM <i class="ticker-star"></i> SWEET <i class="ticker-star"></i> REPEAT <i class="ticker-star"></i></span>
+        <span>FRESH <i class="ticker-star"></i> WARM <i class="ticker-star"></i> SWEET <i class="ticker-star"></i> REPEAT <i class="ticker-star"></i></span>
+        <span>FRESH <i class="ticker-star"></i> WARM <i class="ticker-star"></i> SWEET <i class="ticker-star"></i> REPEAT <i class="ticker-star"></i></span>
+        <span>FRESH <i class="ticker-star"></i> WARM <i class="ticker-star"></i> SWEET <i class="ticker-star"></i> REPEAT <i class="ticker-star"></i></span>
+      </div></div>
+      <div class="benefits">
+        <div class="benefit"><span class="benefit-icon"><svg class="icon"><use href="#i-spark"/></svg></span><div><strong>Печём каждое утро</strong><small>Свежая выпечка небольшими партиями</small></div></div>
+        <div class="benefit"><span class="benefit-icon"><svg class="icon"><use href="#i-heart"/></svg></span><div><strong>С любовью к деталям</strong><small>Много шоколада и никакой суеты</small></div></div>
+        <div class="benefit"><span class="benefit-icon"><svg class="icon"><use href="#i-box"/></svg></span><div><strong>Заказ прямо в Telegram</strong><small>Собери коробку за пару нажатий</small></div></div>
+      </div>
+      <div class="section-heading"><h2>Хиты пекарни</h2><button class="text-button" id="featured-all" type="button">Весь каталог <svg class="icon"><use href="#i-arrow"/></svg></button></div>
+      <div class="grid featured-grid" id="featured-grid"></div>
     </section>
 
-    <section class="players-view" id="playersView">
-      <div class="game-heading">
-        <div>
-          <p class="eyebrow" style="margin-bottom:7px">Онлайн-клуб</p>
-          <h1>Игроки</h1>
-        </div>
-        <button class="icon-button" id="playersBack" aria-label="Вернуться в меню">⌂</button>
+    <section class="view" id="catalog-view" aria-label="Каталог" hidden>
+      <div class="catalog-heading"><h1>Выбирай<br><span class="accent">вкусное.</span></h1><p>Собери коробку счастья: печенье к кофе, круассан к завтраку и что-нибудь просто для настроения.</p></div>
+      <div class="catalog-tools">
+        <label class="search-box"><svg class="icon"><use href="#i-search"/></svg><input id="search-input" type="search" placeholder="Печенье, круассан, торт..." autocomplete="off" aria-label="Поиск по каталогу"></label>
+        <nav class="categories" id="categories" aria-label="Категории"></nav>
       </div>
-      <section class="section-card">
-        <div class="section-heading"><strong>Твой профиль</strong><span>РЕЙТИНГ ELO</span></div>
-        <div class="player-row">
-          <div class="player-info"><strong id="myPlayerName">Загрузка…</strong><small id="myPlayerStats">Стартовый рейтинг — 1000</small></div>
-          <span class="rating-chip" id="myPlayerElo">—</span>
-        </div>
-      </section>
-      <section class="section-card">
-        <div class="section-heading"><strong>Случайный соперник</strong><span>ОНЛАЙН</span></div>
-        <p class="empty-state">Игра до победы. Победа: +25 ELO · поражение: −25 ELO · ничья: 0.</p>
-        <button class="primary-button" id="findRandomOpponent" style="width:100%">Найти соперника</button>
-        <button class="secondary-button" id="cancelMatchmaking" style="width:100%;margin-top:8px" hidden>Отменить поиск</button>
-        <p class="online-error" id="matchmakingStatus" aria-live="polite"></p>
-      </section>
-      <section class="section-card">
-        <div class="section-heading"><strong>Найти игрока</strong><span>ПО TELEGRAM-ЮЗЕРНЕЙМУ</span></div>
-        <form class="inline-form" id="playerSearchForm">
-          <input class="text-input" id="playerSearchInput" type="text" placeholder="@username" autocomplete="off" maxlength="34">
-          <button class="secondary-button" type="submit">Найти</button>
-        </form>
-        <p class="online-error" id="onlineMessage" aria-live="polite"></p>
-        <div class="player-list" id="searchResults"></div>
-      </section>
-      <section class="section-card">
-        <div class="section-heading"><strong>Заявки в друзья</strong></div>
-        <div class="player-list" id="incomingRequests"><span class="empty-state">Нет новых заявок</span></div>
-      </section>
-      <section class="section-card">
-        <div class="section-heading"><strong>Друзья</strong><span id="friendsCount">0</span></div>
-        <div class="player-list" id="friendsList"><span class="empty-state">Пока никого нет</span></div>
-      </section>
-      <section class="section-card">
-        <div class="section-heading"><strong>Мои онлайн-партии</strong></div>
-        <div class="player-list" id="onlineGamesList"><span class="empty-state">Партии появятся здесь</span></div>
-      </section>
-      <section class="section-card">
-        <div class="section-heading"><strong>Таблица лидеров</strong><span>ТОП 50</span></div>
-        <div class="player-list" id="leaderboardList"><span class="empty-state">Загрузка…</span></div>
-      </section>
+      <div class="catalog-meta"><strong>Коллекция</strong><span id="catalog-count">0 позиций</span></div>
+      <div class="grid" id="catalog-grid"></div>
     </section>
-
-    <section class="game-view" id="gameView">
-      <div class="game-heading">
-        <div>
-          <p class="eyebrow" style="margin-bottom:7px">Партия</p>
-          <h1>Шахматы</h1>
-        </div>
-        <button class="icon-button" id="backToMenu" aria-label="Вернуться в меню">⌂</button>
-      </div>
-      <div class="status-card">
-        <div class="status-main">
-          <strong id="statusText">Ход белых</strong>
-          <span id="statusHint">Выбери фигуру, чтобы увидеть ходы</span>
-        </div>
-        <span class="turn-badge" id="turnBadge">белые</span>
-      </div>
-      <div class="board-wrap"><div class="board" id="board" role="grid" aria-label="Шахматная доска"></div></div>
-      <div class="game-actions">
-        <button class="secondary-button" id="newGame">↻ Новая партия</button>
-        <button class="secondary-button" id="flipBoard">⇅ Перевернуть</button>
-      </div>
-      <div class="history-card">
-        <div class="history-title"><span>Ходы</span><span id="moveCount">0 ходов</span></div>
-        <div class="history-list" id="historyList"><span class="history-empty">Первый ход за белыми</span></div>
-      </div>
-    </section>
+    <footer class="footer">CRUMB. · демо-образец Telegram-бота и Mini App · <a href="https://unsplash.com/license" target="_blank" rel="noopener noreferrer">фото Unsplash</a></footer>
   </main>
 
-  <dialog id="promotionDialog">
-    <h2>Выбери фигуру</h2>
-    <div class="promotion-options" id="promotionOptions"></div>
+  <div class="cart-dock" id="cart-dock">
+    <div class="dock-copy"><small id="dock-count">0 позиций</small><strong id="dock-total">0 ₽</strong></div>
+    <button class="dock-checkout" id="dock-checkout" type="button">Оформить <svg class="icon"><use href="#i-arrow"/></svg></button>
+  </div>
+  <nav class="bottom-nav" aria-label="Основная навигация">
+    <button class="nav-button active" id="nav-home" type="button" aria-current="page"><svg class="icon"><use href="#i-home"/></svg>Главная</button>
+    <button class="nav-button" id="nav-catalog" type="button"><svg class="icon"><use href="#i-grid"/></svg>Каталог</button>
+  </nav>
+
+  <dialog id="checkout-dialog" aria-labelledby="checkout-title">
+    <div class="sheet-handle"></div>
+    <form class="sheet-content" id="order-form">
+      <div class="sheet-head"><div><p class="sheet-kicker" id="checkout-kicker">Шаг 1 из 2</p><h2 id="checkout-title">Твой заказ</h2></div><button class="close-button" id="close-checkout" type="button" aria-label="Закрыть"><svg class="icon"><use href="#i-close"/></svg></button></div>
+      <div class="stepper" aria-hidden="true"><span class="active" id="step-one"></span><span id="step-two"></span></div>
+      <section id="cart-step">
+        <div class="cart-lines" id="cart-lines"></div>
+        <div class="order-total"><span>Итого</span><strong id="checkout-total">0 ₽</strong></div>
+        <button class="primary-button sheet-primary" id="to-details" type="button">Продолжить <span class="button-icon"><svg class="icon"><use href="#i-arrow"/></svg></span></button>
+      </section>
+      <section id="details-step" hidden>
+        <label class="form-field"><span>Как к тебе обращаться?</span><input id="customer-name" name="name" autocomplete="name" maxlength="120" placeholder="Твоё имя" required></label>
+        <label class="form-field"><span>Комментарий к заказу</span><textarea id="customer-comment" name="comment" maxlength="1000" placeholder="Пожелания, удобное время связи — по желанию"></textarea></label>
+        <div class="order-total"><span>К оплате после подтверждения</span><strong id="details-total">0 ₽</strong></div>
+        <button class="primary-button sheet-primary" id="submit-order" type="submit">Отправить заказ <span class="button-icon"><svg class="icon"><use href="#i-check"/></svg></span></button>
+        <button class="sheet-secondary" id="back-to-cart" type="button">← Вернуться к заказу</button>
+        <p class="checkout-note"><svg class="icon"><use href="#i-lock"/></svg>Данные уйдут только менеджеру этого бота</p>
+      </section>
+    </form>
   </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
-    (() => {
-      const telegram = window.Telegram && window.Telegram.WebApp;
-      const API_BASE_URL = "https://telegram-chess-api.onrender.com";
-      if (telegram) {
-        telegram.ready();
-        telegram.expand();
-        try { telegram.setHeaderColor("#101722"); } catch (_) {}
-      }
+    // Позиции каталога меняются здесь. icon оставлен для совместимости шаблона;
+    // image — ссылка на фотографию товара. Сейчас использованы фото Unsplash.
+    const CATALOG_ITEMS = [
+      { id: "choco-cookie", category: "Печенье", title: "Печенье «Много шоколада»", desc: "Хрустящий край, мягкая середина и морская соль.", price: 390, icon: "spark", tag: "Bestseller", image: "https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=800&q=85&auto=format&fit=crop" },
+      { id: "classic-cookie", category: "Печенье", title: "Печенье «Классика»", desc: "То самое домашнее — с кусочками шоколада.", price: 350, icon: "spark", tag: "Fresh batch", image: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=800&q=85&auto=format&fit=crop" },
+      { id: "croissant", category: "Выпечка", title: "Круассан сливочный", desc: "Слоёный, хрустящий и ещё немного тёплый.", price: 290, icon: "spark", tag: "Every morning", image: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=800&q=85&auto=format&fit=crop" },
+      { id: "cupcake", category: "Десерты", title: "Капкейк «Вечеринка»", desc: "Нежный бисквит, крем и повод улыбнуться.", price: 320, icon: "heart", tag: "Mood maker", image: "https://images.unsplash.com/photo-1486427944299-d1955d23e34d?w=800&q=85&auto=format&fit=crop" },
+      { id: "choco-cake", category: "Десерты", title: "Торт «Шоколадный»", desc: "Для большого повода или очень хорошего дня.", price: 2490, icon: "heart", tag: "Celebration", image: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=800&q=85&auto=format&fit=crop" },
+      { id: "sourdough", category: "Выпечка", title: "Хлеб на закваске", desc: "Плотный мякиш и ароматная хрустящая корочка.", price: 420, icon: "box", tag: "Slow made", image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&q=85&auto=format&fit=crop" }
+    ];
 
-      const pieceNames = {
-        K: "король", Q: "ферзь", R: "ладья", B: "слон", N: "конь", P: "пешка"
+    const tg = window.Telegram && window.Telegram.WebApp;
+    const mainButton = tg && tg.MainButton;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const quantities = new Map();
+    const byId = id => document.getElementById(id);
+    const dialog = byId("checkout-dialog");
+    const catalogGrid = byId("catalog-grid");
+    let currentView = "home";
+    let selectedCategory = "Все";
+    let checkoutStep = "cart";
+    let toastTimer;
+
+    if (tg) {
+      document.body.classList.add("telegram");
+      tg.ready();
+      tg.expand();
+    }
+
+    function money(value) {
+      return new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(value) + " ₽";
+    }
+    function icon(name) {
+      return `<svg class="icon" aria-hidden="true"><use href="#i-${name}"/></svg>`;
+    }
+    function chosenItems() {
+      return CATALOG_ITEMS.filter(item => quantities.has(item.id))
+        .map(item => ({ id: item.id, title: item.title, price: item.price, quantity: quantities.get(item.id) }));
+    }
+    function itemCount() { return chosenItems().reduce((sum, item) => sum + item.quantity, 0); }
+    function totalPrice() { return chosenItems().reduce((sum, item) => sum + item.price * item.quantity, 0); }
+    function plural(count) {
+      const mod10 = count % 10;
+      const mod100 = count % 100;
+      if (mod10 === 1 && mod100 !== 11) return "позиция";
+      if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return "позиции";
+      return "позиций";
+    }
+    function showToast(text) {
+      const toast = byId("toast");
+      toast.textContent = text;
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("show"), 1900);
+    }
+    function animateElement(element, keyframes, options = {}) {
+      if (!element || reducedMotion.matches || !element.animate) return;
+      element.animate(keyframes, { duration: 550, easing: "cubic-bezier(.16,1,.3,1)", fill: "both", ...options });
+    }
+    function watchImage(image) {
+      const loaded = () => image.classList.add("is-loaded");
+      image.addEventListener("load", loaded, { once: true });
+      image.addEventListener("error", () => {
+        image.style.display = "none";
+        image.parentElement.classList.add("image-unavailable");
+      }, { once: true });
+      if (image.complete && image.naturalWidth) loaded();
+    }
+    watchImage(byId("hero-photo"));
+
+    function createProductCard(item, index = 0) {
+      const card = document.createElement("article");
+      card.className = "product-card";
+      card.dataset.productId = item.id;
+      card.innerHTML = `
+        <div class="product-media">
+          <img class="product-image" src="${item.image}" alt="${item.title}" loading="lazy">
+          ${item.tag ? `<span class="product-tag">${item.tag}</span>` : ""}
+        </div>
+        <div class="product-body">
+          <div class="product-category">${item.category}</div>
+          <h3>${item.title}</h3>
+          <p class="product-desc">${item.desc}</p>
+          <div class="product-bottom">
+            <span class="price">${money(item.price)}</span>
+            <button class="add-button" type="button" aria-label="Добавить ${item.title}">+</button>
+            <div class="quantity-control" hidden>
+              <button class="qty-button minus" type="button" aria-label="Убрать одну позицию ${item.title}">−</button>
+              <span class="qty-label">0</span>
+              <button class="qty-button plus" type="button" aria-label="Добавить ещё ${item.title}">+</button>
+            </div>
+          </div>
+        </div>`;
+      card.querySelector(".add-button").addEventListener("click", () => changeQuantity(item.id, 1));
+      card.querySelector(".minus").addEventListener("click", () => changeQuantity(item.id, -1));
+      card.querySelector(".plus").addEventListener("click", () => changeQuantity(item.id, 1));
+      watchImage(card.querySelector("img"));
+      card.dataset.index = index;
+      return card;
+    }
+    function animateCards(container) {
+      [...container.children].forEach((card, index) => animateElement(card,
+        [{ opacity: 0, transform: "translateY(24px) scale(.97)" }, { opacity: 1, transform: "translateY(0) scale(1)" }],
+        { delay: Math.min(index * 65, 320), duration: 650 }
+      ));
+    }
+    function syncProductCards() {
+      document.querySelectorAll("[data-product-id]").forEach(card => {
+        const quantity = quantities.get(card.dataset.productId) || 0;
+        card.querySelector(".add-button").hidden = quantity > 0;
+        card.querySelector(".quantity-control").hidden = quantity === 0;
+        card.querySelector(".qty-label").textContent = quantity;
+      });
+    }
+    function renderFeatured() {
+      const container = byId("featured-grid");
+      container.replaceChildren(...[CATALOG_ITEMS[0], CATALOG_ITEMS[2]].map((item, index) => createProductCard(item, index)));
+      syncProductCards();
+    }
+    function filteredItems() {
+      const query = byId("search-input").value.trim().toLocaleLowerCase("ru");
+      return CATALOG_ITEMS.filter(item =>
+        (selectedCategory === "Все" || item.category === selectedCategory) &&
+        (!query || `${item.title} ${item.desc} ${item.category}`.toLocaleLowerCase("ru").includes(query))
+      );
+    }
+    function renderCatalog() {
+      const items = filteredItems();
+      byId("catalog-count").textContent = `${items.length} ${plural(items.length)}`;
+      if (!items.length) {
+        catalogGrid.innerHTML = '<div class="empty"><strong>Здесь пока тихо</strong>Попробуй другой запрос или категорию.</div>';
+        return;
+      }
+      catalogGrid.replaceChildren(...items.map((item, index) => createProductCard(item, index)));
+      syncProductCards();
+      animateCards(catalogGrid);
+    }
+    function renderCategories() {
+      const names = ["Все", ...new Set(CATALOG_ITEMS.map(item => item.category))];
+      byId("categories").replaceChildren(...names.map(name => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "category" + (name === selectedCategory ? " active" : "");
+        button.textContent = name;
+        button.setAttribute("aria-pressed", String(name === selectedCategory));
+        button.addEventListener("click", () => {
+          if (selectedCategory === name) return;
+          selectedCategory = name;
+          renderCategories();
+          renderCatalog();
+        });
+        return button;
+      }));
+    }
+
+    function changeQuantity(id, delta) {
+      const next = Math.max(0, Math.min(99, (quantities.get(id) || 0) + delta));
+      if (next) quantities.set(id, next);
+      else quantities.delete(id);
+      syncProductCards();
+      updateCart();
+      if (dialog.open) renderCartLines();
+      const item = CATALOG_ITEMS.find(product => product.id === id);
+      if (delta > 0 && item) showToast(`${item.title} — в корзине`);
+      try { if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light"); } catch (_) { /* тактильный отклик необязателен */ }
+    }
+    function updateCart() {
+      const count = itemCount();
+      const total = totalPrice();
+      const badge = byId("bag-count");
+      badge.hidden = count === 0;
+      badge.textContent = count;
+      byId("dock-count").textContent = `${count} ${plural(count)}`;
+      byId("dock-total").textContent = money(total);
+      byId("cart-dock").classList.toggle("visible", count > 0 && !dialog.open);
+      document.body.classList.toggle("has-cart", count > 0 && !dialog.open);
+      document.body.classList.toggle("main-active", Boolean(tg && count > 0 && !dialog.open));
+      if (!mainButton) return;
+      if (count > 0 && !dialog.open) {
+        mainButton.setText(`Оформить · ${money(total)}`);
+        mainButton.show();
+        mainButton.enable();
+      } else mainButton.hide();
+    }
+
+    function transition(update) {
+      if (document.startViewTransition && !reducedMotion.matches) document.startViewTransition(update);
+      else update();
+    }
+    function navigate(view) {
+      if (view === currentView) return;
+      transition(() => {
+        currentView = view;
+        byId("home-view").hidden = view !== "home";
+        byId("catalog-view").hidden = view !== "catalog";
+        byId("nav-home").classList.toggle("active", view === "home");
+        byId("nav-catalog").classList.toggle("active", view === "catalog");
+        byId("nav-home").toggleAttribute("aria-current", view === "home");
+        byId("nav-catalog").toggleAttribute("aria-current", view === "catalog");
+        window.scrollTo({ top: 0, behavior: "instant" });
+        if (view === "catalog") animateCards(catalogGrid);
+      });
+    }
+    function setDesign(design) {
+      const next = design === "pulse" ? "pulse" : "air";
+      document.body.dataset.design = next;
+      byId("design-name").textContent = next === "pulse" ? "Pulse" : "Air";
+      byId("design-toggle").setAttribute("aria-label", `Дизайн ${next === "pulse" ? "Pulse" : "Air"}. Переключить`);
+      try { localStorage.setItem("crumb-design", next); } catch (_) { /* приватный режим */ }
+    }
+    let savedDesign = "air";
+    try { savedDesign = localStorage.getItem("crumb-design") || "air"; } catch (_) { /* приватный режим */ }
+    setDesign(savedDesign);
+
+    function showCheckoutStep(step) {
+      checkoutStep = step;
+      const isDetails = step === "details";
+      byId("cart-step").hidden = isDetails;
+      byId("details-step").hidden = !isDetails;
+      byId("checkout-title").textContent = isDetails ? "Пара деталей" : "Твой заказ";
+      byId("checkout-kicker").textContent = isDetails ? "Шаг 2 из 2" : "Шаг 1 из 2";
+      byId("step-two").classList.toggle("active", isDetails);
+      byId("details-total").textContent = money(totalPrice());
+      const section = byId(isDetails ? "details-step" : "cart-step");
+      animateElement(section, [{ opacity: 0, transform: `translateX(${isDetails ? 24 : -24}px)` }, { opacity: 1, transform: "translateX(0)" }], { duration: 420 });
+      if (isDetails) setTimeout(() => byId("customer-name").focus({ preventScroll: true }), reducedMotion.matches ? 0 : 250);
+    }
+    function renderCartLines() {
+      const items = chosenItems();
+      byId("checkout-total").textContent = money(totalPrice());
+      byId("to-details").disabled = items.length === 0;
+      if (!items.length) {
+        byId("cart-lines").innerHTML = '<div class="empty"><strong>Корзина пока пуста</strong>Выбери что-нибудь в каталоге — здесь появится заказ.</div>';
+        return;
+      }
+      byId("cart-lines").replaceChildren(...items.map(item => {
+        const product = CATALOG_ITEMS.find(entry => entry.id === item.id);
+        const line = document.createElement("article");
+        line.className = "cart-line";
+        line.innerHTML = `<img src="${product.image}" alt="" loading="lazy"><div><h3>${item.title}</h3><p>${money(item.price * item.quantity)}</p></div>
+          <div class="quantity-control"><button class="qty-button minus" type="button" aria-label="Уменьшить ${item.title}">−</button><span class="qty-label">${item.quantity}</span><button class="qty-button plus" type="button" aria-label="Увеличить ${item.title}">+</button></div>`;
+        line.querySelector(".minus").addEventListener("click", () => changeQuantity(item.id, -1));
+        line.querySelector(".plus").addEventListener("click", () => changeQuantity(item.id, 1));
+        return line;
+      }));
+    }
+    function openCheckout() {
+      if (!itemCount()) {
+        showToast("Сначала добавь что-нибудь в корзину");
+        if (currentView !== "catalog") navigate("catalog");
+        return;
+      }
+      renderCartLines();
+      showCheckoutStep("cart");
+      dialog.showModal();
+      updateCart();
+    }
+
+    byId("logo-button").addEventListener("click", () => navigate("home"));
+    byId("nav-home").addEventListener("click", () => navigate("home"));
+    byId("nav-catalog").addEventListener("click", () => navigate("catalog"));
+    byId("hero-catalog").addEventListener("click", () => navigate("catalog"));
+    byId("featured-all").addEventListener("click", () => navigate("catalog"));
+    byId("design-toggle").addEventListener("click", () => transition(() => setDesign(document.body.dataset.design === "air" ? "pulse" : "air")));
+    byId("search-input").addEventListener("input", renderCatalog);
+    byId("bag-button").addEventListener("click", openCheckout);
+    byId("dock-checkout").addEventListener("click", openCheckout);
+    byId("close-checkout").addEventListener("click", () => dialog.close());
+    byId("to-details").addEventListener("click", () => showCheckoutStep("details"));
+    byId("back-to-cart").addEventListener("click", () => showCheckoutStep("cart"));
+    dialog.addEventListener("close", updateCart);
+    dialog.addEventListener("click", event => {
+      if (event.target !== dialog) return;
+      const rect = dialog.getBoundingClientRect();
+      if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) dialog.close();
+    });
+    if (mainButton) mainButton.onClick(openCheckout);
+
+    byId("order-form").addEventListener("submit", event => {
+      event.preventDefault();
+      const name = byId("customer-name").value.trim();
+      if (!name || !itemCount()) return;
+      const payload = {
+        items: chosenItems(), total: totalPrice(), name,
+        comment: byId("customer-comment").value.trim()
       };
-      const pieceShapes = {
-        p: '<path d="M18 53h28l4 6H14zM22 51c1-6 4-9 9-12-4-3-6-7-5-11a8 8 0 1 1 16 0c1 4-1 8-5 11 5 3 8 6 9 12z"/><path class="detail" d="M26 53h12"/>',
-        r: '<path d="M15 13h9v8h6v-8h8v8h6v-8h9v16h-5l3 22H17l3-22h-5zM14 52h42l4 7H10z"/><path class="detail" d="M23 34v14m10-14v14m10-14v14"/>',
-        n: '<path d="M15 53h38l4 6H11zM18 51c4-9 7-16 5-23l-4-7c9-3 17-2 24 3l5 8c-1 5 2 11 7 19H18z"/><path class="detail" d="M25 28c6 0 10 2 14 6m-12 5 8 1"/><circle cx="31" cy="25" r="1.8"/>',
-        b: '<path d="M14 53h40l4 6H10zM20 51c2-6 6-10 12-14-7-6-8-13-3-20l5-7 4 9c6 7 7 13 1 19 6 4 10 8 12 13z"/><path class="detail" d="m30 21 7 8m-10 19h14"/>',
-        q: '<path d="M14 53h40l4 6H10zM19 50l-4-24 12 10 5-19 8 19 12-10-5 24z"/><circle cx="15" cy="22" r="3"/><circle cx="32" cy="13" r="3"/><circle cx="51" cy="22" r="3"/><path class="detail" d="M23 44h20"/>',
-        k: '<path d="M14 53h40l4 6H10zM19 51c2-7 6-11 13-15 7 4 11 8 13 15zM27 30h10v-5h7v-6h-7v-8h-10v8h-7v6h7z"/><path class="detail" d="M25 45h14"/>'
-      };
-      const files = "abcdefgh";
-      const boardElement = document.getElementById("board");
-      const menuView = document.getElementById("menuView");
-      const gameView = document.getElementById("gameView");
-      const playersView = document.getElementById("playersView");
-      const statusText = document.getElementById("statusText");
-      const statusHint = document.getElementById("statusHint");
-      const turnBadge = document.getElementById("turnBadge");
-      const historyList = document.getElementById("historyList");
-      const moveCount = document.getElementById("moveCount");
-      const promotionDialog = document.getElementById("promotionDialog");
-      const onlineMessage = document.getElementById("onlineMessage");
-
-      let board;
-      let turn;
-      let selected = null;
-      let selectedMoves = [];
-      let lastMove = null;
-      let enPassant = null;
-      let castling;
-      let flipped = false;
-      let history = [];
-      let captured = { w: [], b: [] };
-      let pendingPromotion = null;
-      let finished = false;
-      let profile = null;
-      let onlineGameId = null;
-      let onlineGameData = null;
-      let onlineColor = null;
-      let onlinePollTimer = null;
-      let matchmakingTimer = null;
-      let matchmakingBusy = false;
-
-      const colorOf = piece => piece === piece.toUpperCase() ? "w" : "b";
-      const other = color => color === "w" ? "b" : "w";
-      const rowOf = square => Math.floor(square / 8);
-      const colOf = square => square % 8;
-      const inside = (row, col) => row >= 0 && row < 8 && col >= 0 && col < 8;
-      const squareName = square => `${files[colOf(square)]}${8 - rowOf(square)}`;
-      const squareFromName = name => (8 - Number(name[1])) * 8 + files.indexOf(name[0]);
-
-      function boardFromFen(fen) {
-        const [placement, activeColor, rights, ep] = fen.split(" ");
-        const next = [];
-        for (const row of placement.split("/")) {
-          for (const char of row) {
-            if (/\d/.test(char)) next.push(...Array(Number(char)).fill(null));
-            else next.push(char);
-          }
-        }
-        turn = activeColor === "w" ? "w" : "b";
-        castling = {
-          K: rights.includes("K"), Q: rights.includes("Q"),
-          k: rights.includes("k"), q: rights.includes("q")
-        };
-        enPassant = ep === "-" ? null : squareFromName(ep);
-        return next;
+      if (!tg || typeof tg.sendData !== "function") {
+        showToast("Демо готово: отправка заказа работает внутри Telegram");
+        return;
       }
-
-      function initialBoard() {
-        return [
-          ..."rnbqkbnr", ..."pppppppp",
-          ...Array(32).fill(null),
-          ..."PPPPPPPP", ..."RNBQKBNR"
-        ];
+      const submit = byId("submit-order");
+      submit.disabled = true;
+      try {
+        tg.sendData(JSON.stringify(payload));
+        dialog.close();
+        tg.close();
+      } catch (error) {
+        console.error("Не удалось отправить заказ", error);
+        showToast("Не получилось отправить. Попробуй ещё раз");
+      } finally {
+        submit.disabled = false;
       }
+    });
 
-      function resetGame() {
-        board = initialBoard();
-        turn = "w";
-        selected = null;
-        selectedMoves = [];
-        lastMove = null;
-        enPassant = null;
-        castling = { K: true, Q: true, k: true, q: true };
-        flipped = false;
-        history = [];
-        captured = { w: [], b: [] };
-        finished = false;
-        render();
-      }
+    const heroVisual = byId("hero-visual");
+    heroVisual.addEventListener("pointermove", event => {
+      if (reducedMotion.matches || event.pointerType === "touch") return;
+      const rect = heroVisual.getBoundingClientRect();
+      const x = ((event.clientX - rect.left) / rect.width - .5) * 10;
+      const y = ((event.clientY - rect.top) / rect.height - .5) * 10;
+      heroVisual.style.setProperty("--px", `${x}px`);
+      heroVisual.style.setProperty("--py", `${y}px`);
+    });
+    heroVisual.addEventListener("pointerleave", () => {
+      heroVisual.style.setProperty("--px", "0px");
+      heroVisual.style.setProperty("--py", "0px");
+    });
 
-      function cloneBoard(source) { return source.slice(); }
-
-      function isSquareAttacked(source, target, byColor) {
-        const tr = rowOf(target), tc = colOf(target);
-        for (let from = 0; from < 64; from++) {
-          const piece = source[from];
-          if (!piece || colorOf(piece) !== byColor) continue;
-          const r = rowOf(from), c = colOf(from);
-          const type = piece.toLowerCase();
-          const dr = tr - r, dc = tc - c;
-          if (type === "p") {
-            const dir = byColor === "w" ? -1 : 1;
-            if (dr === dir && Math.abs(dc) === 1) return true;
-          } else if (type === "n") {
-            if ((Math.abs(dr) === 2 && Math.abs(dc) === 1) ||
-                (Math.abs(dr) === 1 && Math.abs(dc) === 2)) return true;
-          } else if (type === "k") {
-            if (Math.max(Math.abs(dr), Math.abs(dc)) === 1) return true;
-          } else {
-            const diagonal = Math.abs(dr) === Math.abs(dc) && dr !== 0;
-            const straight = (dr === 0) !== (dc === 0);
-            const allowed = type === "q" || (type === "b" && diagonal) ||
-              (type === "r" && straight);
-            if (!allowed) continue;
-            const stepR = Math.sign(dr), stepC = Math.sign(dc);
-            let rr = r + stepR, cc = c + stepC, clear = true;
-            while (rr !== tr || cc !== tc) {
-              if (source[rr * 8 + cc]) { clear = false; break; }
-              rr += stepR; cc += stepC;
-            }
-            if (clear) return true;
-          }
-        }
-        return false;
-      }
-
-      function kingSquare(source, color) {
-        return source.findIndex(piece => piece === (color === "w" ? "K" : "k"));
-      }
-
-      function inCheck(source, color) {
-        const king = kingSquare(source, color);
-        return king >= 0 && isSquareAttacked(source, king, other(color));
-      }
-
-      function pseudoMoves(from) {
-        const piece = board[from];
-        if (!piece) return [];
-        const color = colorOf(piece), type = piece.toLowerCase();
-        const r = rowOf(from), c = colOf(from);
-        const moves = [];
-        const add = (row, col, extra = {}) => {
-          if (!inside(row, col)) return false;
-          const to = row * 8 + col;
-          if (board[to] && colorOf(board[to]) === color) return false;
-          moves.push({ from, to, ...extra });
-          return !board[to];
-        };
-
-        if (type === "p") {
-          const dir = color === "w" ? -1 : 1;
-          const home = color === "w" ? 6 : 1;
-          const next = r + dir;
-          if (inside(next, c) && !board[next * 8 + c]) {
-            moves.push({ from, to: next * 8 + c, promotion: next === 0 || next === 7 });
-            const twice = r + dir * 2;
-            if (r === home && !board[twice * 8 + c]) {
-              moves.push({ from, to: twice * 8 + c, doublePawn: true });
-            }
-          }
-          for (const dc of [-1, 1]) {
-            const nr = r + dir, nc = c + dc;
-            if (!inside(nr, nc)) continue;
-            const to = nr * 8 + nc;
-            if ((board[to] && colorOf(board[to]) !== color) || enPassant === to) {
-              moves.push({ from, to, promotion: nr === 0 || nr === 7, enPassant: enPassant === to });
-            }
-          }
-        } else if (type === "n") {
-          for (const [dr, dc] of [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]]) {
-            add(r + dr, c + dc);
-          }
-        } else if (type === "k") {
-          for (let dr = -1; dr <= 1; dr++) {
-            for (let dc = -1; dc <= 1; dc++) {
-              if (dr || dc) add(r + dr, c + dc);
-            }
-          }
-          const homeRow = color === "w" ? 7 : 0;
-          const rights = color === "w" ? ["K", "Q"] : ["k", "q"];
-          const enemy = other(color);
-          if (from === homeRow * 8 + 4 && !inCheck(board, color)) {
-            if (castling[rights[0]] && board[homeRow * 8 + 7] === (color === "w" ? "R" : "r") &&
-                !board[homeRow * 8 + 5] && !board[homeRow * 8 + 6] &&
-                !isSquareAttacked(board, homeRow * 8 + 5, enemy) &&
-                !isSquareAttacked(board, homeRow * 8 + 6, enemy)) {
-              moves.push({ from, to: homeRow * 8 + 6, castle: "K" });
-            }
-            if (castling[rights[1]] && board[homeRow * 8 + 0] === (color === "w" ? "R" : "r") &&
-                !board[homeRow * 8 + 1] && !board[homeRow * 8 + 2] && !board[homeRow * 8 + 3] &&
-                !isSquareAttacked(board, homeRow * 8 + 3, enemy) &&
-                !isSquareAttacked(board, homeRow * 8 + 2, enemy)) {
-              moves.push({ from, to: homeRow * 8 + 2, castle: "Q" });
-            }
-          }
-        } else {
-          const directions = [];
-          if (type === "b" || type === "q") directions.push([-1,-1],[-1,1],[1,-1],[1,1]);
-          if (type === "r" || type === "q") directions.push([-1,0],[1,0],[0,-1],[0,1]);
-          for (const [dr, dc] of directions) {
-            let nr = r + dr, nc = c + dc;
-            while (inside(nr, nc)) {
-              const to = nr * 8 + nc;
-              if (board[to]) {
-                if (colorOf(board[to]) !== color) moves.push({ from, to });
-                break;
-              }
-              moves.push({ from, to });
-              nr += dr; nc += dc;
-            }
-          }
-        }
-        return moves;
-      }
-
-      function applyMove(source, move, promotion = "Q") {
-        const next = cloneBoard(source);
-        const piece = next[move.from];
-        next[move.from] = null;
-        if (move.enPassant) next[move.to + (colorOf(piece) === "w" ? 8 : -8)] = null;
-        next[move.to] = move.promotion
-          ? (colorOf(piece) === "w" ? promotion : promotion.toLowerCase())
-          : piece;
-        if (move.castle) {
-          const row = rowOf(move.from);
-          const kingSide = move.castle === "K";
-          const rookFrom = row * 8 + (kingSide ? 7 : 0);
-          const rookTo = row * 8 + (kingSide ? 5 : 3);
-          next[rookTo] = next[rookFrom];
-          next[rookFrom] = null;
-        }
-        return next;
-      }
-
-      function legalMoves(from) {
-        const piece = board[from];
-        if (!piece || colorOf(piece) !== turn) return [];
-        return pseudoMoves(from).filter(move => {
-          const next = applyMove(board, move);
-          return !inCheck(next, turn);
-        });
-      }
-
-      function allLegalMoves(color) {
-        const savedTurn = turn;
-        turn = color;
-        const all = [];
-        for (let from = 0; from < 64; from++) {
-          if (board[from] && colorOf(board[from]) === color) all.push(...legalMoves(from));
-        }
-        turn = savedTurn;
-        return all;
-      }
-
-      function notation(move, piece, capturedPiece) {
-        const symbol = piece.toLowerCase() === "p" ? "" : piece.toUpperCase();
-        const separator = capturedPiece || move.enPassant ? "×" : "–";
-        const castle = move.castle === "K" ? "O-O" : move.castle === "Q" ? "O-O-O" : null;
-        return castle || `${symbol}${squareName(move.from)}${separator}${squareName(move.to)}${move.promotion ? "=Q" : ""}`;
-      }
-
-      function completeMove(move, promotion = "Q") {
-        if (onlineGameId) {
-          submitOnlineMove(move, promotion);
-          return;
-        }
-        const piece = board[move.from];
-        let taken = board[move.to];
-        if (move.enPassant) taken = board[move.to + (turn === "w" ? 8 : -8)];
-        if (taken) captured[turn].push(taken);
-
-        if (piece === "K") { castling.K = false; castling.Q = false; }
-        if (piece === "k") { castling.k = false; castling.q = false; }
-        if (move.from === 63 || move.to === 63) castling.K = false;
-        if (move.from === 56 || move.to === 56) castling.Q = false;
-        if (move.from === 7 || move.to === 7) castling.k = false;
-        if (move.from === 0 || move.to === 0) castling.q = false;
-
-        const movedPiece = board[move.from];
-        board = applyMove(board, move, promotion);
-        enPassant = move.doublePawn ? (move.from + move.to) / 2 : null;
-        history.push(notation(move, movedPiece, taken));
-        lastMove = [move.from, move.to];
-        turn = other(turn);
-        selected = null;
-        selectedMoves = [];
-
-        const check = inCheck(board, turn);
-        const possible = allLegalMoves(turn);
-        if (!possible.length) {
-          finished = true;
-          statusText.textContent = check
-            ? `Мат — ${turn === "w" ? "чёрные" : "белые"} выиграли`
-            : "Пат — ничья";
-          statusHint.textContent = "Начни новую партию, когда будешь готов";
-        } else {
-          statusText.textContent = check ? "Шах!" : `Ход ${turn === "w" ? "белых" : "чёрных"}`;
-          statusHint.textContent = check ? "Король под атакой" : "Выбери фигуру, чтобы увидеть ходы";
-        }
-        render();
-      }
-
-      function onSquareClick(square) {
-        if (finished) return;
-        if (onlineGameId && turn !== onlineColor) {
-          statusHint.textContent = "Сейчас ход соперника";
-          return;
-        }
-        const piece = board[square];
-        if (selected !== null) {
-          const move = selectedMoves.find(item => item.to === square);
-          if (move) {
-            if (move.promotion) {
-              pendingPromotion = move;
-              showPromotionPicker();
-            } else {
-              completeMove(move);
-            }
-            return;
-          }
-        }
-        if (piece && colorOf(piece) === turn) {
-          selected = square;
-          selectedMoves = legalMoves(square);
-        } else {
-          selected = null;
-          selectedMoves = [];
-        }
-        renderBoard();
-      }
-
-      function showPromotionPicker() {
-        const colorClass = turn === "w" ? "white" : "black";
-        const options = document.getElementById("promotionOptions");
-        options.innerHTML = "";
-        for (const type of ["Q", "R", "B", "N"]) {
-          const button = document.createElement("button");
-          button.type = "button";
-          button.classList.add(colorClass);
-          button.setAttribute("aria-label", ({Q:"Ферзь",R:"Ладья",B:"Слон",N:"Конь"})[type]);
-          const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-          icon.setAttribute("viewBox", "0 0 64 64");
-          icon.setAttribute("aria-hidden", "true");
-          icon.classList.add("piece-svg", colorClass);
-          icon.innerHTML = pieceShapes[type.toLowerCase()];
-          button.appendChild(icon);
-          button.addEventListener("click", () => {
-            promotionDialog.close();
-            completeMove(pendingPromotion, type);
-            pendingPromotion = null;
-          });
-          options.appendChild(button);
-        }
-        promotionDialog.showModal();
-      }
-
-      function renderBoard() {
-        boardElement.innerHTML = "";
-        const checkedKing = inCheck(board, turn) ? kingSquare(board, turn) : -1;
-        const order = flipped
-          ? Array.from({ length: 64 }, (_, i) => 63 - i)
-          : Array.from({ length: 64 }, (_, i) => i);
-        for (let visualIndex = 0; visualIndex < order.length; visualIndex++) {
-          const square = order[visualIndex];
-          const row = rowOf(square), col = colOf(square);
-          const visualRow = Math.floor(visualIndex / 8);
-          const visualCol = visualIndex % 8;
-          const button = document.createElement("button");
-          button.type = "button";
-          button.className = `square ${(row + col) % 2 === 0 ? "light" : "dark"}`;
-          button.setAttribute("role", "gridcell");
-          const piece = board[square];
-          const pieceDescription = piece
-            ? `${colorOf(piece) === "w" ? "белые" : "чёрные"} ${pieceNames[piece.toUpperCase()]}`
-            : "пусто";
-          button.setAttribute("aria-label", `${squareName(square)}, ${pieceDescription}`);
-          if (selected === square) button.classList.add("selected");
-          if (lastMove && lastMove.includes(square)) button.classList.add("last-move");
-          if (square === checkedKing) button.classList.add("in-check");
-          if (piece) {
-            const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-            icon.setAttribute("viewBox", "0 0 64 64");
-            icon.setAttribute("aria-hidden", "true");
-            icon.classList.add("piece-svg", colorOf(piece) === "w" ? "white" : "black");
-            icon.innerHTML = pieceShapes[piece.toLowerCase()];
-            button.appendChild(icon);
-            if (selectedMoves.some(move => move.to === square)) button.classList.add("has-piece");
-          }
-          if (selectedMoves.some(move => move.to === square)) {
-            const dot = document.createElement("span");
-            dot.className = "move-dot";
-            button.appendChild(dot);
-          }
-          if (visualCol === 0) {
-            const coordinate = document.createElement("span");
-            coordinate.className = "coordinate rank";
-            coordinate.textContent = String(8 - row);
-            button.appendChild(coordinate);
-          }
-          if (visualRow === 7) {
-            const coordinate = document.createElement("span");
-            coordinate.className = "coordinate file";
-            coordinate.textContent = files[col];
-            button.appendChild(coordinate);
-          }
-          button.addEventListener("click", () => onSquareClick(square));
-          boardElement.appendChild(button);
-        }
-      }
-
-      function renderHistory() {
-        historyList.innerHTML = "";
-        moveCount.textContent = `${history.length} ${history.length === 1 ? "ход" : history.length > 1 && history.length < 5 ? "хода" : "ходов"}`;
-        if (!history.length) {
-          const empty = document.createElement("span");
-          empty.className = "history-empty";
-          empty.textContent = "Первый ход за белыми";
-          historyList.appendChild(empty);
-          return;
-        }
-        for (let i = 0; i < history.length; i += 2) {
-          const entry = document.createElement("span");
-          entry.textContent = `${Math.floor(i / 2) + 1}. ${history[i]}${history[i + 1] ? `  ${history[i + 1]}` : ""}`;
-          historyList.appendChild(entry);
-        }
-      }
-
-      function render() {
-        turnBadge.textContent = onlineGameId
-          ? (onlineColor === "w" ? "ты белыми" : "ты чёрными")
-          : (turn === "w" ? "белые" : "чёрные");
-        turnBadge.classList.toggle("black", onlineGameId ? onlineColor === "b" : turn === "b");
-        if (!finished) {
-          const check = inCheck(board, turn);
-          statusText.textContent = check ? "Шах!" : onlineGameId
-            ? (turn === onlineColor ? "Твой ход" : "Ход соперника")
-            : `Ход ${turn === "w" ? "белых" : "чёрных"}`;
-          statusHint.textContent = check ? "Король под атакой" : onlineGameId
-            ? `${onlineGameData?.white?.username ? `@${onlineGameData.white.username}` : onlineGameData?.white?.first_name} против ${onlineGameData?.black?.username ? `@${onlineGameData.black.username}` : onlineGameData?.black?.first_name}`
-            : "Выбери фигуру, чтобы увидеть ходы";
-        }
-        renderBoard();
-        renderHistory();
-      }
-
-      function setOnlineMessage(text, success = false) {
-        onlineMessage.textContent = text || "";
-        onlineMessage.classList.toggle("online-success", success);
-      }
-
-      async function apiRequest(path, method = "GET", body) {
-        if (!API_BASE_URL) throw new Error("Онлайн-сервер ещё не подключён");
-        if (!telegram || !telegram.initData) throw new Error("Открой Mini App из Telegram, чтобы войти");
-        const response = await fetch(`${API_BASE_URL}${path}`, {
-          method,
-          headers: {
-            "Content-Type": "application/json",
-            "X-Telegram-Init-Data": telegram.initData
-          },
-          body: body === undefined ? undefined : JSON.stringify(body)
-        });
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data.detail || `Ошибка сервера: ${response.status}`);
-        return data;
-      }
-
-      function makePlayerRow(player, actionLabel, action) {
-        const row = document.createElement("div");
-        row.className = "player-row";
-        const info = document.createElement("div");
-        info.className = "player-info";
-        const name = document.createElement("strong");
-        name.textContent = player.username ? `@${player.username}` : player.first_name;
-        const stats = document.createElement("small");
-        stats.textContent = `${player.elo} ELO · ${player.games_played} партий`;
-        info.append(name, stats);
-        row.appendChild(info);
-        if (actionLabel) {
-          const button = document.createElement("button");
-          button.type = "button";
-          button.className = "secondary-button";
-          button.textContent = actionLabel;
-          button.addEventListener("click", action);
-          row.appendChild(button);
-        }
-        return row;
-      }
-
-      function openPlayersView() {
-        if (onlinePollTimer) clearInterval(onlinePollTimer);
-        onlinePollTimer = null;
-        onlineGameId = null;
-        onlineGameData = null;
-        onlineColor = null;
-        gameView.classList.remove("active");
-        menuView.classList.add("hidden");
-        playersView.classList.add("active");
-        loadOnlineData();
-      }
-
-      async function loadOnlineData() {
-        if (!API_BASE_URL) {
-          document.getElementById("menuPlayerName").textContent = "Онлайн-клуб";
-          document.getElementById("menuPlayerHint").textContent = "Сервер рейтинга ещё не подключён";
-          document.getElementById("myPlayerName").textContent = "Сервер не подключён";
-          setOnlineMessage("Сначала нужно развернуть онлайн-сервер с базой игроков.");
-          return;
-        }
-        if (!telegram || !telegram.initData) {
-          document.getElementById("myPlayerName").textContent = "Нужен вход из Telegram";
-          setOnlineMessage("Открой Mini App кнопкой в Telegram, а не в обычном браузере.");
-          return;
-        }
-        setOnlineMessage("Подключаю профиль…");
-        try {
-          const auth = await apiRequest("/api/auth", "POST");
-          profile = auth.player;
-          document.getElementById("menuPlayerName").textContent =
-            profile.username ? `@${profile.username}` : profile.first_name;
-          document.getElementById("menuPlayerHint").textContent =
-            `${profile.games_played} партий · ${profile.wins} побед`;
-          document.getElementById("menuPlayerElo").textContent = `${profile.elo} ELO`;
-          document.getElementById("myPlayerName").textContent =
-            profile.username ? `@${profile.username}` : profile.first_name;
-          document.getElementById("myPlayerStats").textContent =
-            `${profile.games_played} партий · ${profile.wins} побед`;
-          document.getElementById("myPlayerElo").textContent = `${profile.elo} ELO`;
-          setOnlineMessage("");
-          await Promise.all([loadFriends(), loadLeaderboard(), loadOnlineGames()]);
-        } catch (error) {
-          setOnlineMessage(error.message);
-        }
-      }
-
-      async function searchPlayers(query) {
-        const results = document.getElementById("searchResults");
-        results.innerHTML = "";
-        try {
-          const data = await apiRequest(`/api/players?q=${encodeURIComponent(query)}`);
-          if (!data.players.length) {
-            results.innerHTML = '<span class="empty-state">Игрок не найден. Попроси его открыть Mini App.</span>';
-            return;
-          }
-          for (const player of data.players) {
-            results.appendChild(makePlayerRow(player, "Добавить", async () => {
-              try {
-                const request = await apiRequest("/api/friends/request", "POST", {
-                  username: player.username
-                });
-                setOnlineMessage(
-                  request.status === "accepted" ? "Вы уже друзья." : "Заявка отправлена.",
-                  true
-                );
-                await loadFriends();
-              } catch (error) {
-                setOnlineMessage(error.message);
-              }
-            }));
-          }
-        } catch (error) {
-          setOnlineMessage(error.message);
-        }
-      }
-
-      async function loadFriends() {
-        const data = await apiRequest("/api/friends");
-        const friendsList = document.getElementById("friendsList");
-        const incomingList = document.getElementById("incomingRequests");
-        friendsList.innerHTML = "";
-        incomingList.innerHTML = "";
-        document.getElementById("friendsCount").textContent = String(data.friends.length);
-        if (!data.friends.length) {
-          friendsList.innerHTML = '<span class="empty-state">Пока никого нет</span>';
-        } else {
-          for (const friend of data.friends) {
-            friendsList.appendChild(makePlayerRow(friend, "Играть", () => startOnlineGame(friend)));
-          }
-        }
-        if (!data.incoming.length) {
-          incomingList.innerHTML = '<span class="empty-state">Нет новых заявок</span>';
-        } else {
-          for (const request of data.incoming) {
-            incomingList.appendChild(makePlayerRow(request, "Принять", async () => {
-              try {
-                await apiRequest(`/api/friends/${request.request_id}/accept`, "POST", {});
-                await loadFriends();
-                setOnlineMessage("Теперь вы друзья.", true);
-              } catch (error) {
-                setOnlineMessage(error.message);
-              }
-            }));
-          }
-        }
-      }
-
-      async function loadLeaderboard() {
-        const list = document.getElementById("leaderboardList");
-        const data = await apiRequest("/api/leaderboard");
-        list.innerHTML = "";
-        if (!data.players.length) {
-          list.innerHTML = '<span class="empty-state">Пока нет игроков</span>';
-          return;
-        }
-        data.players.forEach((player, index) => {
-          const row = makePlayerRow(player, null, null);
-          const rank = document.createElement("span");
-          rank.className = "rating-chip";
-          rank.textContent = `#${index + 1} · ${player.elo}`;
-          row.appendChild(rank);
-          list.appendChild(row);
-        });
-      }
-
-      async function loadOnlineGames() {
-        const list = document.getElementById("onlineGamesList");
-        const data = await apiRequest("/api/games");
-        list.innerHTML = "";
-        if (!data.games.length) {
-          list.innerHTML = '<span class="empty-state">Партии появятся здесь</span>';
-          return;
-        }
-        for (const game of data.games) {
-          const opponent = game.white.id === profile.id ? game.black : game.white;
-          const row = makePlayerRow(
-            { ...opponent, games_played: opponent.games_played || 0 },
-            game.status === "active" ? "Открыть" : "Итог",
-            () => openOnlineGame(game.id)
-          );
-          if (game.status === "finished") {
-            const result = document.createElement("small");
-            result.className = "online-success";
-            result.textContent = ` · ${game.result}`;
-            row.querySelector(".player-info").appendChild(result);
-          }
-          list.appendChild(row);
-        }
-      }
-
-      async function pollMatchmaking() {
-        if (matchmakingBusy || !API_BASE_URL) return;
-        matchmakingBusy = true;
-        try {
-          const data = await apiRequest("/api/matchmaking", "POST");
-          if (data.status === "matched") {
-            if (matchmakingTimer) clearInterval(matchmakingTimer);
-            matchmakingTimer = null;
-            document.getElementById("matchmakingStatus").textContent = "Соперник найден — игра начинается!";
-            document.getElementById("findRandomOpponent").hidden = false;
-            document.getElementById("cancelMatchmaking").hidden = true;
-            await openOnlineGame(data.game.id);
-          } else {
-            document.getElementById("matchmakingStatus").textContent = "Ищем соперника…";
-          }
-        } catch (error) {
-          if (matchmakingTimer) clearInterval(matchmakingTimer);
-          matchmakingTimer = null;
-          document.getElementById("findRandomOpponent").hidden = false;
-          document.getElementById("cancelMatchmaking").hidden = true;
-          document.getElementById("matchmakingStatus").textContent = error.message;
-        } finally {
-          matchmakingBusy = false;
-        }
-      }
-
-      async function startMatchmaking() {
-        if (!API_BASE_URL || !telegram || !telegram.initData) {
-          document.getElementById("matchmakingStatus").textContent =
-            !API_BASE_URL ? "Онлайн-сервер ещё не подключён." : "Открой Mini App из Telegram.";
-          return;
-        }
-        document.getElementById("findRandomOpponent").hidden = true;
-        document.getElementById("cancelMatchmaking").hidden = false;
-        document.getElementById("matchmakingStatus").textContent = "Ищем соперника…";
-        await pollMatchmaking();
-        if (!matchmakingTimer && !onlineGameId && document.getElementById("cancelMatchmaking").hidden === false) {
-          matchmakingTimer = setInterval(pollMatchmaking, 2500);
-        }
-      }
-
-      async function cancelMatchmaking() {
-        if (matchmakingTimer) clearInterval(matchmakingTimer);
-        matchmakingTimer = null;
-        document.getElementById("findRandomOpponent").hidden = false;
-        document.getElementById("cancelMatchmaking").hidden = true;
-        try {
-          await apiRequest("/api/matchmaking/cancel", "POST");
-          document.getElementById("matchmakingStatus").textContent = "Поиск отменён.";
-        } catch (error) {
-          document.getElementById("matchmakingStatus").textContent = error.message;
-        }
-      }
-
-      async function startOnlineGame(friend) {
-        try {
-          const game = await apiRequest("/api/games", "POST", {
-            friend_username: friend.username
-          });
-          await openOnlineGame(game.id);
-        } catch (error) {
-          setOnlineMessage(error.message);
-        }
-      }
-
-      function showOnlineGame(game) {
-        onlineGameData = game;
-        onlineColor = game.white.id === profile.id ? "w" : "b";
-        board = boardFromFen(game.fen);
-        history = game.moves.map(move => move.san);
-        const last = game.moves[game.moves.length - 1];
-        lastMove = last ? [squareFromName(last.uci.slice(0, 2)), squareFromName(last.uci.slice(2, 4))] : null;
-        selected = null;
-        selectedMoves = [];
-        finished = game.status === "finished";
-        if (finished) {
-          const won = game.winner_id === profile.id;
-          statusText.textContent = game.result === "1/2-1/2"
-            ? "Ничья"
-            : won ? "Ты победил!" : "Партия окончена";
-          const delta = onlineColor === "w" ? game.rating_change.white : game.rating_change.black;
-          statusHint.textContent = `Изменение рейтинга: ${delta > 0 ? "+" : ""}${delta} ELO`;
-        }
-        render();
-      }
-
-      async function openOnlineGame(gameId) {
-        if (onlinePollTimer) clearInterval(onlinePollTimer);
-        if (matchmakingTimer) clearInterval(matchmakingTimer);
-        matchmakingTimer = null;
-        onlineGameId = gameId;
-        document.getElementById("findRandomOpponent").hidden = false;
-        document.getElementById("cancelMatchmaking").hidden = true;
-        playersView.classList.remove("active");
-        menuView.classList.add("hidden");
-        gameView.classList.add("active");
-        document.getElementById("newGame").hidden = true;
-        try {
-          const game = await apiRequest(`/api/games/${encodeURIComponent(gameId)}`);
-          showOnlineGame(game);
-          onlinePollTimer = setInterval(async () => {
-            try {
-              const update = await apiRequest(`/api/games/${encodeURIComponent(gameId)}`);
-              if (onlineGameData?.fen !== update.fen || onlineGameData?.status !== update.status) {
-                showOnlineGame(update);
-                if (update.status === "finished") clearInterval(onlinePollTimer);
-              }
-            } catch (error) {
-              statusHint.textContent = error.message;
-            }
-          }, 1500);
-        } catch (error) {
-          onlineGameId = null;
-          gameView.classList.remove("active");
-          playersView.classList.add("active");
-          setOnlineMessage(error.message);
-        }
-      }
-
-      async function submitOnlineMove(move, promotion) {
-        const uci = `${squareName(move.from)}${squareName(move.to)}${move.promotion ? promotion.toLowerCase() : ""}`;
-        try {
-          const game = await apiRequest(
-            `/api/games/${encodeURIComponent(onlineGameId)}/move`,
-            "POST",
-            { uci }
-          );
-          showOnlineGame(game);
-        } catch (error) {
-          statusHint.textContent = error.message;
-          const game = await apiRequest(`/api/games/${encodeURIComponent(onlineGameId)}`).catch(() => null);
-          if (game) showOnlineGame(game);
-        }
-      }
-
-      document.getElementById("startGame").addEventListener("click", () => {
-        if (onlinePollTimer) clearInterval(onlinePollTimer);
-        onlinePollTimer = null;
-        onlineGameId = null;
-        onlineGameData = null;
-        onlineColor = null;
-        document.getElementById("newGame").hidden = false;
-        playersView.classList.remove("active");
-        menuView.classList.add("hidden");
-        gameView.classList.add("active");
-        resetGame();
-      });
-      document.getElementById("backToMenu").addEventListener("click", () => {
-        if (onlinePollTimer) clearInterval(onlinePollTimer);
-        onlinePollTimer = null;
-        onlineGameId = null;
-        onlineGameData = null;
-        onlineColor = null;
-        document.getElementById("newGame").hidden = false;
-        gameView.classList.remove("active");
-        playersView.classList.remove("active");
-        menuView.classList.remove("hidden");
-      });
-      document.getElementById("openPlayers").addEventListener("click", openPlayersView);
-      document.getElementById("playersBack").addEventListener("click", () => {
-        if (matchmakingTimer || !document.getElementById("cancelMatchmaking").hidden) {
-          cancelMatchmaking();
-        }
-        playersView.classList.remove("active");
-        menuView.classList.remove("hidden");
-      });
-      document.getElementById("findRandomOpponent").addEventListener("click", startMatchmaking);
-      document.getElementById("cancelMatchmaking").addEventListener("click", cancelMatchmaking);
-      document.getElementById("playerSearchForm").addEventListener("submit", event => {
-        event.preventDefault();
-        const query = document.getElementById("playerSearchInput").value.trim();
-        if (query.length < 2) {
-          setOnlineMessage("Введи хотя бы 2 символа.");
-          return;
-        }
-        searchPlayers(query);
-      });
-      document.getElementById("newGame").addEventListener("click", resetGame);
-      document.getElementById("flipBoard").addEventListener("click", () => {
-        flipped = !flipped;
-        renderBoard();
-      });
-
-      resetGame();
-      if (API_BASE_URL && telegram && telegram.initData) loadOnlineData();
-      else {
-        document.getElementById("menuPlayerHint").textContent = API_BASE_URL
-          ? "Открой Mini App из Telegram, чтобы войти"
-          : "Нужен общий сервер для рейтинга и друзей";
-      }
-    })();
+    renderFeatured();
+    renderCategories();
+    renderCatalog();
+    updateCart();
   </script>
 </body>
 </html>
